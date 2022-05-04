@@ -17,6 +17,16 @@ extern bool wifi_connect;
 extern bool gsm_connect;
 extern bool isInternetConnected;
 
+uint8_t reasonForStop = 0;
+
+/*
+* @brief: Feature added by Raja
+* This feature will avoid hardcoding of messages. 
+*/
+typedef enum resonofstop { EmergencyStop, EVDisconnected , HardReset, Local , Other , PowerLoss, Reboot,Remote, Softreset,UnlockCommand,DeAuthorized};
+
+static const char *resonofstop_str[] = { "EmergencyStop", "EVDisconnected" , "HardReset", "Local" , "Other" , "PowerLoss", "Reboot","Remote", "SoftReset","UnlockCommand","DeAuthorized"};
+
 extern LCD_I2C lcd;
 
 ChargePointStatusService::ChargePointStatusService(){}  //dummy constructor
@@ -75,6 +85,33 @@ void ChargePointStatusService::loop() {
 		if (emergencyRelayClose){
 
 			//return ChargePointStatus::Faulted;
+			//Capture the reason for stop.
+			if(getChargePointStatusService_A()->getOverVoltage() == true){
+				reasonForStop = Other;
+	}else if(getChargePointStatusService_A()->getUnderVoltage() == true){
+		if(eic.GetLineVoltageA() < 170 && eic.GetLineVoltageA() > 50){
+			reasonForStop = Other;
+			
+		}else{
+			
+			reasonForStop = Other;
+		}
+
+	}else if(getChargePointStatusService_A()->getUnderCurrent() == true){
+		reasonForStop = EVDisconnected;
+
+	}else if(getChargePointStatusService_A()->getOverCurrent() == true){
+	reasonForStop = Other;
+	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
+		reasonForStop = Other;
+
+	}else if(getChargePointStatusService_A()->getOverTemperature() == true){
+		reasonForStop = Other;
+	}
+	else if(emergencyRelayClose){
+		reasonForStop = EmergencyStop;
+	}
+
 			#if LCD_ENABLED
         lcd.clear();
  		lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
@@ -143,16 +180,18 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 	
 		//return ChargePointStatus::Preparing;
 	} else {
-		#if LCD_ENABLED
+		
 		//lcd.setCursor(0, 0);
 		//Transaction is currently running
 		if (emergencyRelayClose){
 			//return ChargePointStatus::Faulted;
 			//lcd.print("STATUS: FAULTED");
+			reasonForStop = EmergencyStop;
 		} else {
 				
 				if (!evDrawsEnergy) {
 					//return ChargePointStatus::SuspendedEV;
+					#if LCD_ENABLED
 					lcd.clear();
  					lcd.setCursor(0, 0);
 					lcd.print("STATUS: SUSPENDEDEV");
@@ -164,14 +203,20 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 					lcd.print("TIME");
 					lcd.setCursor(5, 1);
 					lcd.print("");
+					#endif
+					//reasonForStop = Local;
 				}
+				
 				if (!evseOffersEnergy) {
 					//return ChargePointStatus::SuspendedEVSE;
+					#if LCD_ENABLED
 					lcd.clear();
  					lcd.setCursor(0, 0);
 					lcd.print("STATUS: SUSPENDEDEVSE");
+					#endif
+					//reasonForStop = Local;
 				}
-				#endif
+				
 				//return ChargePointStatus::Charging;
 				/*lcd.clear();
  				lcd.setCursor(0, 0);

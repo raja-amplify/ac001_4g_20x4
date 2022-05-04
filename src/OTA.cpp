@@ -20,7 +20,8 @@ void setupOTA() {
   
     // configure server and url
     //String post_data = "{\"version\":\"AC001_India/AC001_Three_Connectors.ino.esp32\", \"deviceId\":\"AC001\"}";  //evre-iot-308216.appspot.com/ota.update/AC001_Africa
-    String post_data = "{\"version\":\"AC001_India_4G/AC001_Three_Connectors.ino.esp32\", \"deviceId\":\"AC001\"}";  //evre-iot-308216.appspot.com/ota.update/AC001_Africa
+    //String post_data = "{\"version\":\"AC001_India_4G/AC001_Three_Connectors.ino.esp32\", \"deviceId\":\"AC001\"}";  //evre-iot-308216.appspot.com/ota.update/AC001_Africa
+    String post_data = "{\"version\":\"AC001_India_4G/AC001_Three_Connectors20x4.ino.esp32\", \"deviceId\":\"AC001\"}";
     http.begin("https://us-central1-evre-iot-308216.cloudfunctions.net/otaUpdate");
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Connection", "keep-alive");

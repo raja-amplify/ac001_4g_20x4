@@ -51,11 +51,24 @@ extern TinyGsmClient client;
 
 //20x4 lcd display
 
+#if LCD_ENABLED
 #include "src/LCD_I2C.h"
 
 LCD_I2C lcd(0x27, 20, 4); // Default address of most PCF8574 modules, change according
+#endif
 
-
+#if DWIN_ENABLED
+#include "src/dwin.h"
+extern unsigned char ct[22];//connected
+extern unsigned char nct[22];//not connected 
+extern unsigned char et[22];//ethernet
+extern unsigned char wi[22];//wifi
+extern unsigned char tr[22];//tap rfid
+extern unsigned char utr[22];//rfid unavailable
+extern unsigned char g[22];//4g
+extern unsigned char clu[22];//connected
+extern unsigned char clun[22];//not connected 
+#endif
 
 WebSocketsClient webSocket;
 
@@ -143,6 +156,14 @@ void setup() {
   lcd.print("**BOOTING**"); // You can make spaces using well... spaces
   lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
   lcd.print("####################");
+  #endif
+
+  #if DWIN_ENABLED
+  uint8_t err = 0;
+  dwin_setup();
+  err = DWIN_SET(utr,sizeof(utr)/sizeof(utr[0]));
+  err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
+  
   #endif
 
 	for (uint8_t t = 4; t > 0; t--) {
@@ -240,6 +261,10 @@ void setup() {
 //WiFi
     while(internet == false){
       Serial.println(F("Internet loop"));
+      #if DWIN_ENABLED
+          err = DWIN_SET(nct,sizeof(nct)/sizeof(nct[0]));
+           err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
+      #endif
       bluetooth_Loop();
       if(wifi_enable == true && wifi_connect == true){
         Serial.println(F("Waiting for WiFi Connction..."));
@@ -254,6 +279,9 @@ void setup() {
           lcd.setCursor(3, 2);
           lcd.print("STATUS: WIFI");
           #endif
+          #if DWIN_ENABLED
+          err = DWIN_SET(wi,sizeof(wi)/sizeof(wi[0]));
+          #endif
           delay(100);
           connectToWebsocket();
         }else if(WiFi.status() != WL_CONNECTED){
@@ -262,6 +290,10 @@ void setup() {
           bluetooth_Loop();
           wifi_Loop();
           Serial.println("Wifi Not Connected: "+ String(counter_wifiNotConnected));
+           #if DWIN_ENABLED
+          err = DWIN_SET(nct,sizeof(nct)/sizeof(nct[0]));
+           err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
+          #endif
           if(counter_wifiNotConnected++ > 50){
             counter_wifiNotConnected = 0;
             
@@ -276,6 +308,11 @@ void setup() {
           gsm_Loop();
           bluetooth_Loop();
           Serial.println("GSM not Connected: " + String(counter_gsmNotConnected));
+          #if DWIN_ENABLED
+          err = DWIN_SET(nct,sizeof(nct)/sizeof(nct[0]));
+          err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
+          
+          #endif
           if(counter_gsmNotConnected++ > 1){  //2 == 5min
             counter_gsmNotConnected = 0;
             
@@ -290,6 +327,9 @@ void setup() {
  
             lcd.setCursor(0, 2);
             lcd.print("CONNECTED VIA 4G");
+          #endif
+          #if DWIN_ENABLED
+          err = DWIN_SET(g,sizeof(g)/sizeof(g[0]));
           #endif
         }
 

@@ -7,8 +7,11 @@
 #include "StopTransaction.h"
 #include "OcppEngine.h"
 #include "MeteringService.h"
+#if LCD_ENABLED
 #include "LCD_I2C.h"
 extern LCD_I2C lcd;
+#endif
+#include "dwin.h"
 
 extern int globalmeterstartA;
 extern unsigned long st_timeA;
@@ -16,6 +19,14 @@ extern int globalmeterstartB;
 extern unsigned long st_timeB;
 extern int globalmeterstartC;
 extern unsigned long st_timeC;
+
+/*
+* @brief: Feature added by Raja
+* This feature will avoid hardcoding of messages. 
+*/
+//typedef enum resonofstop { EmergencyStop, EVDisconnected , HardReset, Local , Other , PowerLoss, Reboot,Remote, Softreset,UnlockCommand,DeAuthorized};
+extern uint8_t reasonForStop;
+static const char *resonofstop_str[] = { "EmergencyStop", "EVDisconnected" , "HardReset", "Local" , "Other" , "PowerLoss", "Reboot","Remote", "SoftReset","UnlockCommand","DeAuthorized"};
 
 StopTransaction::StopTransaction(String idTag, int transactionId, int connectorId) {
 this->idTag = idTag;
@@ -74,6 +85,10 @@ DynamicJsonDocument* StopTransaction::createReq() {
   String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
   lcd.print(String(hrMinSec));
 	#endif
+  #if DWIN_ENABLED
+
+
+  #endif
     }else if(connectorId == 2){
       meterStop = getMeteringService()->currentEnergy_B();
       stop_time = millis();
@@ -98,6 +113,11 @@ DynamicJsonDocument* StopTransaction::createReq() {
   String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
   lcd.print(String(hrMinSec));
 	#endif
+  
+  #if DWIN_ENABLED
+
+
+  #endif
     }else if(connectorId == 3){
       meterStop = getMeteringService()->currentEnergy_C();
       stop_time = millis();
@@ -122,6 +142,12 @@ DynamicJsonDocument* StopTransaction::createReq() {
   String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
   lcd.print(String(hrMinSec));
 	#endif
+
+  #if DWIN_ENABLED
+
+
+  #endif
+
     }
 
   }
@@ -136,6 +162,8 @@ DynamicJsonDocument* StopTransaction::createReq() {
   //   transactionId = getChargePointStatusService()->getTransactionId();
   // }
   payload["transactionId"] = transactionId;
+
+  payload["reason"] = resonofstop_str[reasonForStop];
 
   
 

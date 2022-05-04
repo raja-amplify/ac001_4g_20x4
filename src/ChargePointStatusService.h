@@ -36,8 +36,6 @@ private:
 	bool overCurrent = false;
 	bool underCurrent = false;
 	bool emergencyRelayClose = false;
-	bool GfciError = false;
-	bool EmgcyButton = false;
 	ChargePointStatus currentStatus = ChargePointStatus::NOT_SET;
 	WebSocketsClient *webSocket;
 public:
