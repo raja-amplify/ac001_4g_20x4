@@ -45,5 +45,6 @@ static const char *dwinREADstatus_str[] = { "DISP_NO_DAT", "DISP_DAT_AVAIL", "DI
 int8_t DWIN_read();
 uint8_t DWIN_SET(unsigned char *,size_t);
 void dwin_setup();
+void flush_dwin();
 
 #endif

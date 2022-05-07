@@ -1074,11 +1074,28 @@ uint8_t err = 0;
   v1[7] = instantVoltage_A;
   v2[7] = instantVoltage_B;
   v3[7] = instantVoltage_C;
+  i1[7] = instantCurrrent_A*10;
+  i2[7] = instantCurrrent_B*10;
+  i3[7] = instantCurrrent_C*10;
+  e1[7] = instantPower_A*10;
+  e2[7] = instantPower_B*10;
+  e3[7] = instantPower_C*10;
   err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0])); // page 0
+  flush_dwin();
   err = DWIN_SET(avail,sizeof(avail)/sizeof(avail[0])); 
+  flush_dwin();
   err = DWIN_SET(v1,sizeof(v1)/sizeof(v1[0])); 
+  flush_dwin();
   err = DWIN_SET(v2,sizeof(v2)/sizeof(v2[0])); 
+  flush_dwin();
   err = DWIN_SET(v3,sizeof(v3)/sizeof(v3[0])); 
+  err = DWIN_SET(i1,sizeof(i1)/sizeof(i1[0])); 
+  err = DWIN_SET(i2,sizeof(i2)/sizeof(i2[0])); 
+  err = DWIN_SET(i3,sizeof(i3)/sizeof(i3[0])); 
+  err = DWIN_SET(e1,sizeof(e1)/sizeof(e1[0])); 
+  err = DWIN_SET(e2,sizeof(e2)/sizeof(e2[0])); 
+  err = DWIN_SET(e3,sizeof(e3)/sizeof(e3[0])); 
+  flush_dwin();
   
 #endif
 	}

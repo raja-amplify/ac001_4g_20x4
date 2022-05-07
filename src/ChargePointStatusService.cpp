@@ -10,6 +10,21 @@
 #include "SimpleOcppOperationFactory.h"
 #include "LCD_I2C.h"
 
+#if DWIN_ENABLED
+#include "dwin.h"
+
+extern unsigned char change_page[10];
+extern unsigned char avail[28]; 
+extern unsigned char not_avail[28];
+extern unsigned char fault_emgy[28];
+extern unsigned char fault_noearth[28];
+extern unsigned char fault_overVolt[28];
+extern unsigned char fault_underVolt[28];
+extern unsigned char fault_overTemp[28];
+extern unsigned char fault_overCurr[28];
+extern unsigned char fault_underCurr[28]; 
+#endif
+
 #include <string.h>
 
 extern bool webSocketConncted;
@@ -152,6 +167,37 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 	
 	#endif
 
+	#if DWIN_ENABLED
+		 
+			uint8_t err = 0;
+			
+			if(getChargePointStatusService_A()->getOverVoltage() == true){
+			
+			err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
+			
+	}else if(getChargePointStatusService_A()->getUnderVoltage() == true){
+		if(eic.GetLineVoltageA() < 170 && eic.GetLineVoltageA() > 50){
+			err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+			
+		}else{
+			err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+		}
+
+	}else if(getChargePointStatusService_A()->getUnderCurrent() == true){
+		err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
+	}else if(getChargePointStatusService_A()->getOverCurrent() == true){
+			err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
+	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
+			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+
+	}else if(getChargePointStatusService_A()->getOverTemperature() == true){
+			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+	}
+	else if(emergencyRelayClose){
+			err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
+	}
+	#endif
+
 		} else {
 
 			//return ChargePointStatus::Available;
@@ -172,6 +218,10 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 			lcd.print("cloud: offline");
 			#endif
 			
+			#if DWIN_ENABLED
+			change_page[9] = 0;
+			uint8_t err  = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+			#endif
 
 		}
 

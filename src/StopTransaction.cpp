@@ -11,7 +11,16 @@
 #include "LCD_I2C.h"
 extern LCD_I2C lcd;
 #endif
+#if DWIN_ENABLED
 #include "dwin.h"
+
+extern unsigned char kwh[8];
+extern unsigned char change_page[10];
+extern unsigned char HR[8];
+extern unsigned char MINS[8];
+extern unsigned char SEC[8];
+
+#endif
 
 extern int globalmeterstartA;
 extern unsigned long st_timeA;
@@ -86,8 +95,28 @@ DynamicJsonDocument* StopTransaction::createReq() {
   lcd.print(String(hrMinSec));
 	#endif
   #if DWIN_ENABLED
-
-
+  uint8_t err = 0;
+    unsigned long seconds = (stop_time - st_timeA) / 1000;
+  int hr = seconds/3600;                                                        //Number of seconds in an hour
+  int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
+  int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
+  
+      // Take to page 2. 
+      change_page[9] = 2; 
+      err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+      //kwh[7] = float((meterStop-globalmeterstartA)/1000);
+      kwh[7] = int((meterStop-globalmeterstartA)/1000);
+      err = DWIN_SET(kwh,sizeof(kwh)/sizeof(kwh[0]));
+      HR[7] = hr;
+      MINS[7] = mins;
+      SEC[7] = sec;
+      err = DWIN_SET(HR,sizeof(HR)/sizeof(HR[0]));
+      err = DWIN_SET(MINS,sizeof(MINS)/sizeof(MINS[0]));
+      err = DWIN_SET(SEC,sizeof(SEC)/sizeof(SEC[0]));
+      delay(3000);
+      // Take to page 2. 
+      change_page[9] = 0; 
+      err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
   #endif
     }else if(connectorId == 2){
       meterStop = getMeteringService()->currentEnergy_B();
@@ -115,6 +144,24 @@ DynamicJsonDocument* StopTransaction::createReq() {
 	#endif
   
   #if DWIN_ENABLED
+uint8_t err = 0;
+    unsigned long seconds = (stop_time - st_timeA) / 1000;
+  int hr = seconds/3600;                                                        //Number of seconds in an hour
+  int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
+  int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
+  
+      // Take to page 2. 
+      change_page[9] = 2; 
+      err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+      //kwh[7] = float((meterStop-globalmeterstartA)/1000);
+      kwh[7] = int((meterStop-globalmeterstartA)/1000);
+      err = DWIN_SET(kwh,sizeof(kwh)/sizeof(kwh[0]));
+      HR[7] = hr;
+      MINS[7] = mins;
+      SEC[7] = sec;
+      err = DWIN_SET(HR,sizeof(HR)/sizeof(HR[0]));
+      err = DWIN_SET(MINS,sizeof(MINS)/sizeof(MINS[0]));
+      err = DWIN_SET(SEC,sizeof(SEC)/sizeof(SEC[0]));
 
 
   #endif
@@ -144,6 +191,24 @@ DynamicJsonDocument* StopTransaction::createReq() {
 	#endif
 
   #if DWIN_ENABLED
+uint8_t err = 0;
+    unsigned long seconds = (stop_time - st_timeA) / 1000;
+  int hr = seconds/3600;                                                        //Number of seconds in an hour
+  int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
+  int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
+  
+      // Take to page 2. 
+      change_page[9] = 2; 
+      err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+      //kwh[7] = float((meterStop-globalmeterstartA)/1000);
+      kwh[7] = int((meterStop-globalmeterstartA)/1000);
+      err = DWIN_SET(kwh,sizeof(kwh)/sizeof(kwh[0]));
+      HR[7] = hr;
+      MINS[7] = mins;
+      SEC[7] = sec;
+      err = DWIN_SET(HR,sizeof(HR)/sizeof(HR[0]));
+      err = DWIN_SET(MINS,sizeof(MINS)/sizeof(MINS[0]));
+      err = DWIN_SET(SEC,sizeof(SEC)/sizeof(SEC[0]));
 
 
   #endif
