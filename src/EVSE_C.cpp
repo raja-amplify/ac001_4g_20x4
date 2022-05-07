@@ -3,6 +3,21 @@
 #include "ControlPilot.h"
 #include "LCD_I2C.h"
 
+#if DWIN_ENABLED
+#include "dwin.h"
+extern unsigned char v1[8];
+extern unsigned char v2[8];
+extern unsigned char v3[8];
+extern unsigned char i1[8];
+extern unsigned char i2[8];
+extern unsigned char i3[8];
+extern unsigned char e1[8];
+extern unsigned char e2[8];
+extern unsigned char e3[8];
+extern unsigned char change_page[10];
+extern unsigned char avail[22];
+#endif
+
 OnBoot_C onBoot_C;
 OnReadUserId_C onReadUserId_C;
 OnSendHeartbeat_C onSendHeartbeat_C;
@@ -992,6 +1007,20 @@ void displayMeterValuesC(){
   lcd.print(String(instantPower_B));
   lcd.setCursor(15, 3); // Or setting the cursor in the desired position.
   lcd.print(String(instantPower_C));
+#endif
+
+#if DWIN_ENABLED
+uint8_t err = 0;
+  change_page[9] = 1;
+  v1[7] = instantVoltage_A;
+  v2[7] = instantVoltage_B;
+  v3[7] = instantVoltage_C;
+  err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0])); // page 0
+  err = DWIN_SET(avail,sizeof(avail)/sizeof(avail[0])); 
+  err = DWIN_SET(v1,sizeof(v1)/sizeof(v1[0])); 
+  err = DWIN_SET(v2,sizeof(v2)/sizeof(v2[0])); 
+  err = DWIN_SET(v3,sizeof(v3)/sizeof(v3[0])); 
+  
 #endif
 	}
 		

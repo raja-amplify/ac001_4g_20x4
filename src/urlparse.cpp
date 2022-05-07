@@ -308,6 +308,8 @@ switch (protocol)
 
     host_m = String (domain);
 
+    host_m.trim(); // Necessary to avoid a few issues.
+
     b_size = sizeof(pagePartOfURL) / sizeof(char);
 
     //contextRoot_m = convertToString(pagePartOfURL, b_size);

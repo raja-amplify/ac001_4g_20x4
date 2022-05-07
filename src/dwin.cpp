@@ -29,17 +29,33 @@ unsigned char Buffer[80];
 unsigned char Buffer_Len = 0;
 unsigned char tcount = 0;
 
+extern int8_t button;
+
 
 /* @brief: The follow is a lookup table
  * Table : This makes implementation faster
  */ 
+//The below messages belong to status of page 0,1 and 3 : Address is 0X52,0X00
+// status - available, not available, fault - name of fault
+unsigned char avail[22] = {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X41,0X56,0X41,0X49,0X4c,0X41,0X42,0X4c,0X45};
+unsigned char not_avail[22] = {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X4e,0X4f,0X54,0X20,0X41,0X56,0X41,0X49,0X4c,0X41,0X42,0X4c,0X45};
+unsigned char fault_emgy[22] = {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X66,0X61,0X75,0X6c,0X74,0X20,0X65,0X6d,0X67,0X79};
+unsigned char fault_noearth[22] = {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X66,0X61,0X75,0X6c,0X74,0X20,0X6e,0X6f,0X20,0X65,0X61,0X72,0X74,0X68};
+unsigned char fault_overVolt[24] = {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X66,0X61,0X75,0X6c,0X74,0X20,0X6f,0X76,0X65,0X72,0X20,0X76,0X6f,0X6c,0X74,0X61,0X67,0X65};
+unsigned char fault_underVolt[42] = {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X66,0X61,0X75,0X6c,0X74,0X20,0X75,0X6e,0X64,0X65,0X72,0X20,0X76,0X6f,0X6c,0X74,0X61,0X67,0X65};
+unsigned char fault_overTemp[28] = {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X66,0X61,0X75,0X6c,0X74,0X20,0X6f,0X76,0X65,0X72,0X20,0X74,0X65,0X6d,0X70,0X65,0X72,0X61,0X74,0X75,0X72,0X65};
+
 unsigned char ct[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//connected
 unsigned char nct[22] =  {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X6E,0X6F,0X74,0X20,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0X20,0X20,0X20};//not connected 
 unsigned char et[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X45,0X74,0X68,0X65,0X72,0X6E,0X65,0X74,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//ethernet
-unsigned char wi[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X57,0X69,0X66,0X69,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//wifi
+unsigned char wi[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X45,0X00,0X57,0X69,0X66,0X69,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//wifi
 unsigned char tr[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X54,0X00,0X54,0X61,0X70,0X20,0X52,0X46,0X49,0X44,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//tap rfid
 unsigned char utr[22] =  {0X5A, 0XA5, 0X13, 0X82,0X54,0X00,0X52,0X46,0X49,0X44,0X20,0X75,0X6E,0X61,0X76,0X61,0X69,0X6C,0X61,0X6C,0X65,0X20};//rfid unavailable
-unsigned char g[22] =    {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X34,0X47,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//4g
+unsigned char g[22] =    {0X5A, 0XA5, 0X13, 0X82,0X45,0X00,0X34,0X47,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//4g
+
+//on page 0 display tap rfid or scan qr - address 5400 
+
+unsigned char tap_rfid[30] =  {0X5A, 0XA5, 0X1B, 0X82,0X54,0X00, 0X54,0X61,0X70,0X20,0X52,0X46,0X49,0X44,0X2f,0X53,0X63,0X61,0X6e,0X20,0X51,0X52,0X20,0X63,0X6f,0X64,0X65};
 
 unsigned char clu[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X45,0X00,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//connected
 unsigned char clun[22] =  {0X5A, 0XA5, 0X13, 0X82,0X45,0X00,0X6E,0X6F,0X74,0X20,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0X20,0X20,0X20};//not connected 
@@ -54,37 +70,56 @@ unsigned char e1[8] = {0X5A, 0XA5, 0X05, 0X82, 0X37, 0X00, 0X00, 0X23};
 unsigned char e2[8] = {0X5A, 0XA5, 0X05, 0X82, 0X25, 0X00, 0X00, 0X23};
 unsigned char e3[8] = {0X5A, 0XA5, 0X05, 0X82, 0X13, 0X00, 0X00, 0X23};
 
+unsigned char change_page[10] = {0X5A, 0XA5, 0X07, 0X82, 0X00, 0X84, 0X5A, 0X01, 0X00, 0X00}; // LAST BYTE is the page number
+
 /*
 * @brief: DWIN_read 
 * This function is used to read from a particular location
 */
-uint8_t DWIN_read()
+int8_t DWIN_read()
 {
 if (dwin.available())
   {
-    //dwin.println(F("Some buffer filled"));
+    //
     Buffer[Buffer_Len] = dwin.read();
+    Serial.println(Buffer[Buffer_Len],HEX);
     Buffer_Len++;
     tcount = 5;
-
-   return DISP_DAT_AVAIL;
+    if(Buffer_Len > 10)
+    {
+     Buffer_Len = 0; 
+    }
+   return -3;
   }
   else
   {
-    if (Buffer[0] == 0X5A)
+    Buffer_Len = 0;
+    //if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[3]==0x06 &&Buffer[4]==0x83 &&Buffer[5]==0x59 &&Buffer[6]==0x00 && Buffer[7]==0x01 && Buffer[8]==0x00)
+    if(Buffer[0] == 0X01 &&  Buffer[1] == 0X00 &&  Buffer[2] == 0X01)
     { 
-      Buffer_Len = 0;
+      button = 1;
+     return button;
+    }
+     else if(Buffer[0] == 0X01 &&  Buffer[1] == 0X00 &&  Buffer[2] == 0X00)
+    { 
+      button = 2;
+     return button;
+    }
+    else if(Buffer[0] == 0XFF &&  Buffer[1] == 0X01 &&  Buffer[2] == 0X00 && Buffer[3] == 0X01)
+    { 
+      button = 3;
+     return button;
     }
     else
     {
-    return DISP_NO_DAT;
+    return -1;
     }
     
   }
 
 
   
-return DISP_DAT_READ;
+return -2;
 }
 
 /*

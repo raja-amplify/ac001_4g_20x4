@@ -59,6 +59,7 @@ LCD_I2C lcd(0x27, 20, 4); // Default address of most PCF8574 modules, change acc
 
 #if DWIN_ENABLED
 #include "src/dwin.h"
+int8_t button = 0;
 extern unsigned char ct[22];//connected
 extern unsigned char nct[22];//not connected 
 extern unsigned char et[22];//ethernet
@@ -68,6 +69,10 @@ extern unsigned char utr[22];//rfid unavailable
 extern unsigned char g[22];//4g
 extern unsigned char clu[22];//connected
 extern unsigned char clun[22];//not connected 
+extern unsigned char avail[22]; //available
+extern unsigned char not_avail[22]; // not available
+extern unsigned char change_page[10];
+extern unsigned char tap_rfid[30];
 #endif
 
 WebSocketsClient webSocket;
@@ -161,8 +166,11 @@ void setup() {
   #if DWIN_ENABLED
   uint8_t err = 0;
   dwin_setup();
-  err = DWIN_SET(utr,sizeof(utr)/sizeof(utr[0]));
-  err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
+  change_page[9] = 0;
+  err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0])); // page 0
+  err = DWIN_SET(not_avail,sizeof(not_avail)/sizeof(not_avail[0])); // status not available
+  err = DWIN_SET(tap_rfid,sizeof(tap_rfid)/sizeof(tap_rfid[0]));
+  err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0])); // cloud: not connected
   
   #endif
 
@@ -280,6 +288,7 @@ void setup() {
           lcd.print("STATUS: WIFI");
           #endif
           #if DWIN_ENABLED
+          //Cloud : WiFi
           err = DWIN_SET(wi,sizeof(wi)/sizeof(wi[0]));
           #endif
           delay(100);
@@ -329,6 +338,7 @@ void setup() {
             lcd.print("CONNECTED VIA 4G");
           #endif
           #if DWIN_ENABLED
+          err = DWIN_SET(avail,sizeof(avail)/sizeof(avail[0]));
           err = DWIN_SET(g,sizeof(g)/sizeof(g[0]));
           #endif
         }
@@ -435,7 +445,9 @@ void loop() {
   getChargePointStatusService_C()->loop();
       
   meteringService->loop();
-  	
+
+  
+  
   #if CP_ACTIVE
     ControlP_loop();
   #endif
@@ -451,12 +463,27 @@ void loop() {
 String readIdTag = "";
 void EVSE_ReadInput(MFRC522* mfrc522){     // this funtion should be called only if there is Internet
   readIdTag = "";
-  int readConnectorVal = 0;
+  unsigned long tout = millis();
+  uint8_t readConnectorVal = 0;
   readIdTag = readRfidTag(true, mfrc522);
   if(readIdTag.equals("") == false){
   	//EVSE_StopTxnRfid(readIdTag);
-    readConnectorVal = requestConnectorStatus();
-
+    //readConnectorVal = requestConnectorStatus();
+    #if DWIN_ENABLED
+    change_page[9] = 3; // change to page 3 and wait for input  
+     uint8_t err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+     delay(10);
+     err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+     delay(10);
+     err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+     delay(10);
+     Serial.println(DWIN_read());
+ Serial.println(DWIN_read());
+ Serial.println(DWIN_read());
+    while(millis() - tout < 15000)
+    {
+     
+    readConnectorVal = dwin_input();
     if(readConnectorVal > 0){
       bool result = assignEvseToConnector(readIdTag, readConnectorVal);
       if(result == true){
@@ -466,9 +493,10 @@ void EVSE_ReadInput(MFRC522* mfrc522){     // this funtion should be called only
       }
     }else{
       Serial.println(F("Invalid Connector Id Received"));
-      delay(2000);
+      //delay(2000);
     }
-
+    }
+  #endif 
   }
 delay(100);
 }
@@ -571,8 +599,19 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 }
 //#endif
 
-
-
+/*
+* @brief : Read the touch display
+*/
+#if DWIN_ENABLED
+int8_t dwin_input()
+{
+  
+  button = DWIN_read();
+  Serial.printf("Button pressed : %d",button);
+  return button;
+  
+}
+#endif
 //#if WIFI_ENABLED
 int wifi_counter = 0;
 void wifi_Loop(){
