@@ -1,5 +1,8 @@
 /*
    4G support added - 21/04/2022
+
+   Added DWIN display support.
+   Fixed the status of NOT_SET 09
   <POD without Control Pilot Support>
   The following code is developed by Pulkit Agrawal & Wamique.
   Added Master-Slave files
@@ -73,6 +76,7 @@ extern unsigned char avail[22]; //available
 extern unsigned char not_avail[22]; // not available
 extern unsigned char change_page[10];
 extern unsigned char tap_rfid[30];
+extern unsigned char clear_tap_rfid[30];
 #endif
 
 WebSocketsClient webSocket;
@@ -168,11 +172,11 @@ void setup() {
   dwin_setup();
   change_page[9] = 0;
   err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0])); // page 0
-  flush_dwin();
+  delay(50);
   err = DWIN_SET(not_avail, sizeof(not_avail) / sizeof(not_avail[0])); // status not available
-  flush_dwin();
+  delay(50);
   err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0])); // cloud: not connected
-  flush_dwin();
+  delay(50);
 #endif
 
   for (uint8_t t = 4; t > 0; t--) {
@@ -272,7 +276,9 @@ void setup() {
     Serial.println(F("Internet loop"));
 #if DWIN_ENABLED
     err = DWIN_SET(nct, sizeof(nct) / sizeof(nct[0]));
+    delay(50);
     err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0]));
+    delay(50);
 #endif
     bluetooth_Loop();
     if (wifi_enable == true && wifi_connect == true) {
@@ -291,13 +297,13 @@ void setup() {
 #if DWIN_ENABLED
         //Cloud : WiFi
         err = DWIN_SET(wi, sizeof(wi) / sizeof(wi[0]));
-        flush_dwin();
+        delay(50);
         err = DWIN_SET(wi, sizeof(wi) / sizeof(wi[0]));
-        flush_dwin();
+        delay(50);
         err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        flush_dwin();
+        delay(50);
         err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        flush_dwin();
+        delay(50);
 #endif
         delay(100);
         connectToWebsocket();
@@ -309,9 +315,9 @@ void setup() {
         Serial.println("Wifi Not Connected: " + String(counter_wifiNotConnected));
 #if DWIN_ENABLED
         err = DWIN_SET(nct, sizeof(nct) / sizeof(nct[0]));
-        flush_dwin();
+        delay(50);
         err = DWIN_SET(not_avail, sizeof(not_avail) / sizeof(not_avail[0]));
-        flush_dwin();
+        delay(50);
 #endif
         if (counter_wifiNotConnected++ > 50) {
           counter_wifiNotConnected = 0;
@@ -333,9 +339,9 @@ void setup() {
         Serial.println("GSM not Connected: " + String(counter_gsmNotConnected));
 #if DWIN_ENABLED
         err = DWIN_SET(nct, sizeof(nct) / sizeof(nct[0]));
-        flush_dwin();
+        delay(50);
         err = DWIN_SET(not_avail, sizeof(not_avail) / sizeof(not_avail[0]));
-        flush_dwin();
+        delay(50);
 #endif
         if (counter_gsmNotConnected++ > 1) { //2 == 5min
           counter_gsmNotConnected = 0;
@@ -357,9 +363,9 @@ void setup() {
 #endif
 #if DWIN_ENABLED
         err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        flush_dwin();
+        delay(50);
         err = DWIN_SET(g, sizeof(g) / sizeof(g[0]));
-        flush_dwin();
+        delay(50);
 #endif
       }
 
@@ -416,10 +422,10 @@ void setup() {
   Serial.println(F("End of Setup"));
   startBLETime = millis();
 
+   err = DWIN_SET(clear_tap_rfid, sizeof(clear_tap_rfid) / sizeof(clear_tap_rfid[0]));
+   delay(50);
    err = DWIN_SET(tap_rfid, sizeof(tap_rfid) / sizeof(tap_rfid[0]));
-   flush_dwin();
-   err = DWIN_SET(tap_rfid, sizeof(tap_rfid) / sizeof(tap_rfid[0]));
-   flush_dwin();
+   delay(50);
 }
 
 

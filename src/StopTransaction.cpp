@@ -117,6 +117,7 @@ DynamicJsonDocument* StopTransaction::createReq() {
       // Take to page 2. 
       change_page[9] = 0; 
       err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+      delay(50);
   #endif
     }else if(connectorId == 2){
       meterStop = getMeteringService()->currentEnergy_B();
@@ -162,7 +163,11 @@ uint8_t err = 0;
       err = DWIN_SET(HR,sizeof(HR)/sizeof(HR[0]));
       err = DWIN_SET(MINS,sizeof(MINS)/sizeof(MINS[0]));
       err = DWIN_SET(SEC,sizeof(SEC)/sizeof(SEC[0]));
-
+      delay(3000);
+      // Take to page 2. 
+      change_page[9] = 0; 
+      err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+      delay(50);
 
   #endif
     }else if(connectorId == 3){
@@ -209,7 +214,11 @@ uint8_t err = 0;
       err = DWIN_SET(HR,sizeof(HR)/sizeof(HR[0]));
       err = DWIN_SET(MINS,sizeof(MINS)/sizeof(MINS[0]));
       err = DWIN_SET(SEC,sizeof(SEC)/sizeof(SEC[0]));
-
+      delay(3000);
+      // Take to page 2. 
+      change_page[9] = 0; 
+      err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
+      delay(50);
 
   #endif
 

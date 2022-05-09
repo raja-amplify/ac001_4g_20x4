@@ -26,6 +26,7 @@ extern unsigned char e2[8];
 extern unsigned char e3[8];
 extern unsigned char change_page[10];
 extern unsigned char avail[22];
+extern unsigned char charging[28];
 #endif
 //new variable names defined by @Pulkit. might break the build.
 OnBoot_A onBoot_A;
@@ -1071,9 +1072,12 @@ void displayMeterValues(){
 #if DWIN_ENABLED
 uint8_t err = 0;
   change_page[9] = 1;
-  v1[7] = instantVoltage_A;
-  v2[7] = instantVoltage_B;
-  v3[7] = instantVoltage_C;
+  v1[6] = instantVoltage_A >> 8;
+  v1[7] = instantVoltage_A & 0xff;
+  v2[6] = instantVoltage_B >> 8;
+  v2[7] = instantVoltage_B & 0xff;
+  v3[6] = instantVoltage_C >> 8;
+  v3[7] = instantVoltage_C & 0xff;
   i1[7] = instantCurrrent_A*10;
   i2[7] = instantCurrrent_B*10;
   i3[7] = instantCurrrent_C*10;
@@ -1081,13 +1085,11 @@ uint8_t err = 0;
   e2[7] = instantPower_B*10;
   e3[7] = instantPower_C*10;
   err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0])); // page 0
-  flush_dwin();
-  err = DWIN_SET(avail,sizeof(avail)/sizeof(avail[0])); 
-  flush_dwin();
+  delay(50);
+  err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0])); 
+  delay(50);
   err = DWIN_SET(v1,sizeof(v1)/sizeof(v1[0])); 
-  flush_dwin();
   err = DWIN_SET(v2,sizeof(v2)/sizeof(v2[0])); 
-  flush_dwin();
   err = DWIN_SET(v3,sizeof(v3)/sizeof(v3[0])); 
   err = DWIN_SET(i1,sizeof(i1)/sizeof(i1[0])); 
   err = DWIN_SET(i2,sizeof(i2)/sizeof(i2[0])); 
@@ -1095,7 +1097,6 @@ uint8_t err = 0;
   err = DWIN_SET(e1,sizeof(e1)/sizeof(e1[0])); 
   err = DWIN_SET(e2,sizeof(e2)/sizeof(e2[0])); 
   err = DWIN_SET(e3,sizeof(e3)/sizeof(e3[0])); 
-  flush_dwin();
   
 #endif
 	}

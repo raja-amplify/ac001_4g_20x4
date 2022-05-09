@@ -20,6 +20,7 @@ StatusNotification::StatusNotification(ChargePointStatus currentStatus, int conn
 		Serial.print(timestamp);
 		Serial.print(F(". New Status: "));
 	}
+	//This fix is to get the current status and avoid NOT_SET
 	
 //	EEPROM.begin(sizeof(EEPROM_Data));
 	switch (currentStatus) {
@@ -60,6 +61,7 @@ StatusNotification::StatusNotification(ChargePointStatus currentStatus, int conn
 		//	EEPROM.put(8, "Faulted");
 			break;
 		case (ChargePointStatus::NOT_SET):
+			currentStatus = getChargePointStatusService_A()->inferenceStatus();
 			Serial.print(F("*NOT_SET*\n"));
 			break;
 		default:
@@ -83,7 +85,7 @@ DynamicJsonDocument* StatusNotification::createReq() {
 	payload["errorCode"] = "NoError";  //No error diagnostics support
 //	currentStatus = getChargePointStatusService()->inferenceStatus();
 	//Part of Offline Implementation
-
+	
 	//EEPROM.begin(sizeof(EEPROM_Data));
 	switch (currentStatus) {
 		case (ChargePointStatus::Available):
@@ -123,9 +125,61 @@ DynamicJsonDocument* StatusNotification::createReq() {
 	//	EEPROM.put(8, "Faulted");
 	break;
 	default:
-		payload["status"] = "NOT_SET";
-		Serial.print(F("[StatusNotification] Error: Sending status NOT_SET!\n"));
+			//set and then send.
+			if(connectorId == 1)
+			{
+	    		currentStatus = getChargePointStatusService_A()->inferenceStatus();
+			}
+			else if(connectorId == 2)
+			{
+				currentStatus = getChargePointStatusService_B()->inferenceStatus();
+			}
+			else if(connectorId == 3)
+			{
+				currentStatus = getChargePointStatusService_C()->inferenceStatus();
+			}
+		switch (currentStatus) {
+		case (ChargePointStatus::Available):
+		payload["status"] = "Available";
+	//	EEPROM.put(8, "Available");
+	break;
+		case (ChargePointStatus::Preparing):
+		payload["status"] = "Preparing";
+	//	EEPROM.put(8, "Preparing");
+	break;
+		case (ChargePointStatus::Charging):
+		payload["status"] = "Charging";
+	//	EEPROM.put(8, "Charging");
+	break;
+		case (ChargePointStatus::SuspendedEVSE):
+		payload["status"] = "SuspendedEVSE";
+	//	EEPROM.put(8, "SuspendedEVSE");
+	break;
+		case (ChargePointStatus::SuspendedEV):
+		payload["status"] = "SuspendedEV";
+	//	EEPROM.put(8, "SuspendedEV");
+	break;
+		case (ChargePointStatus::Finishing):
+		payload["status"] = "Finishing";
+	//	EEPROM.put(8, "Finishing");
+	break;
+		case (ChargePointStatus::Reserved):
+		payload["status"] = "Reserved";
+	//	EEPROM.put(8, "Reserved");
+	break;
+		case (ChargePointStatus::Unavailable):
+		payload["status"] = "Unavailable";
+	//	EEPROM.put(8, "Unavailable");
+	break;
+		case (ChargePointStatus::Faulted):
+		payload["status"] = "Faulted";
+	//	EEPROM.put(8, "Faulted");
+	break;
+		default: 
+		payload["status"] = "Unavailable";
+		Serial.print(F("[StatusNotification] Error: Sending status is still NOT_SET!\n"));
 		break;
+	}
 	}
 //	EEPROM.commit();
 //	EEPROM.end();
