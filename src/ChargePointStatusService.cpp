@@ -7,12 +7,13 @@
 #include "ChargePointStatusService.h"
 #include "StatusNotification.h"
 #include "OcppEngine.h"
+#include "Master.h"
 #include "SimpleOcppOperationFactory.h"
 #include "LCD_I2C.h"
 
 #if DWIN_ENABLED
 #include "dwin.h"
-
+extern unsigned char charging[28];
 extern unsigned char change_page[10];
 extern unsigned char avail[28]; 
 extern unsigned char not_avail[28];
@@ -242,6 +243,7 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		
 	
 		//return ChargePointStatus::Preparing;
+		reasonForStop = Local;
 	} else {
 		
 		//lcd.setCursor(0, 0);
@@ -249,7 +251,16 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		if (emergencyRelayClose){
 			//return ChargePointStatus::Faulted;
 			//lcd.print("STATUS: FAULTED");
+			reasonForStop = Local;
+
+			bool EMGCY_status = requestEmgyStatus();
+		
+
+			if(EMGCY_status)
+			{
 			reasonForStop = EmergencyStop;
+			}
+
 			if(getChargePointStatusService_A()->getOverVoltage() == true || getChargePointStatusService_B()->getOverVoltage() == true || getChargePointStatusService_C()->getOverVoltage() == true){
 				reasonForStop = Other;
 				#if DWIN_ENABLED
@@ -349,8 +360,8 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
  				lcd.setCursor(0, 0);
 				lcd.print("STATUS: CHARGING");*/
 				#if DWIN_ENABLED
-				uint8_t err = DWIN_SET(avail,sizeof(avail)/sizeof(avail[0]));
-				delay(50);
+				uint8_t err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+				delay(10);
 				#endif
 			
 		}

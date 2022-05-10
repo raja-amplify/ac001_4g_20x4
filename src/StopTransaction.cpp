@@ -59,8 +59,9 @@ DynamicJsonDocument* StopTransaction::createReq() {
   // if (getChargePointStatusService() != NULL) {
   //   idTag += getChargePointStatusService()->getIdTag();
   // }
+  //JSON_OBJECT_SIZE = 5 to include reason for stop as well.
 
-  DynamicJsonDocument *doc = new DynamicJsonDocument(JSON_OBJECT_SIZE(4) + (idTag.length() + 1) + (JSONDATE_LENGTH + 1));
+  DynamicJsonDocument *doc = new DynamicJsonDocument(JSON_OBJECT_SIZE(5) + (idTag.length() + 1) + (JSONDATE_LENGTH + 1));
   JsonObject payload = doc->to<JsonObject>();
   
   if (!idTag.isEmpty()) { //if there is no idTag present, we shouldn't add a default one
@@ -237,7 +238,11 @@ uint8_t err = 0;
   // }
   payload["transactionId"] = transactionId;
 
+  Serial.printf("[StopTransaction] reason for stop : %d", reasonForStop);
   payload["reason"] = resonofstop_str[reasonForStop];
+
+  //Clearing the reason.
+ reasonForStop = 3;
 
   
 
