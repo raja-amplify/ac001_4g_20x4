@@ -106,7 +106,12 @@ DynamicJsonDocument* StopTransaction::createReq() {
       change_page[9] = 2; 
       err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
       //kwh[7] = float((meterStop-globalmeterstartA)/1000);
-      kwh[7] = int((meterStop-globalmeterstartA)/1000);
+      //kwh[7] = int((meterStop-globalmeterstartA)/1000);
+      int jaf = meterStop-globalmeterstartA;
+      kwh[6] = jaf >> 8;
+      kwh[7] = jaf & 0xff;
+      //Since Kwh is with 3 decimal points multiply by 1000
+      //kwh[7]  = jaf/1000;
       err = DWIN_SET(kwh,sizeof(kwh)/sizeof(kwh[0]));
       HR[7] = hr;
       MINS[7] = mins;

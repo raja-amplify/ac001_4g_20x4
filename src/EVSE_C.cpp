@@ -49,6 +49,9 @@ int counter1_C =0;
 
 ulong timerDisplayC;
 
+//Reason for stop
+extern uint8_t reasonForStop;
+
 extern LCD_I2C lcd;
 
 ulong t_C;
@@ -631,6 +634,7 @@ void EVSE_C_loop() {
 				 if(drawing_current_C <= 0.15){
 				 	counter_drawingCurrent_C++;
 				 	if(counter_drawingCurrent_C > 120){
+						reasonForStop = 1; // EV disconnected
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);

@@ -42,7 +42,8 @@ ulong T_SENDHEARTBEAT = 60000;
 bool timeout_active_A =false;
 bool timer_initialize_A = false;
 ulong timeout_start_A =0;
-
+//Reason for stop
+extern uint8_t reasonForStop;
 //new flag names. replace them with old names.
 bool evIsPlugged_A; 
 bool flag_evseIsBooted_A;
@@ -683,6 +684,7 @@ void EVSE_A_loop() {
 				 	counter_drawingCurrent_A++;
 				 	if(counter_drawingCurrent_A > 120){
 				 		counter_drawingCurrent_A = 0;
+						 reasonForStop = 1; // EV disconnected
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);

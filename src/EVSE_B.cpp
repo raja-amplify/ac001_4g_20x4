@@ -42,6 +42,9 @@ bool flag_evseSoftReset_B;
 extern bool flag_rebootRequired_C;
 extern bool flag_rebootRequired_A;
 
+//Reason for stop
+extern uint8_t reasonForStop;
+
 float chargingLimit_B = 32.0f;
 String Ext_currentIdTag_B = "";
 
@@ -641,6 +644,7 @@ void EVSE_B_loop() {
 				 	counter_drawingCurrent_B++;
 				 	if(counter_drawingCurrent_B > 120){
 				 		counter_drawingCurrent_B = 0;
+						 reasonForStop = 1; // EV disconnected
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);
