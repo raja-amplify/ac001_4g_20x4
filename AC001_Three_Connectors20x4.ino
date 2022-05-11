@@ -90,6 +90,9 @@ ChargePointStatusService *chargePointStatusService_C;
 MeteringService *meteringService;
 ATM90E36 eic(5);
 #define SS_EIC 5          //GPIO 5 chip_select pin
+//#define SS_EIC_earth 2
+//ATM90E36 eic_earth(SS_EIC_earth);
+
 SPIClass * hspi = NULL;
 
 
@@ -238,7 +241,8 @@ void setup() {
    	Serial.println("Unable to Fetch protocol");
     }*/
   urlparser();
-
+  //Added this not to break.
+  //preferences.begin("credentials",false);
   ssid_m = preferences.getString("ssid", "");
   if (ssid_m.length() > 0) {
     Serial.println("Fetched SSID: " + String(ssid_m));
@@ -259,6 +263,7 @@ void setup() {
   gsm_enable = preferences.getBool("gsm", 0);
   Serial.println("Fetched Gsm data: " + String(gsm_enable));
 
+  //Ideally preferences should be closed.
   //WiFi
   wifi_connect = wifi_enable;
   gsm_connect  = gsm_enable;
@@ -313,12 +318,12 @@ void setup() {
         bluetooth_Loop();
         wifi_Loop();
         Serial.println("Wifi Not Connected: " + String(counter_wifiNotConnected));
-#if DWIN_ENABLED
+        #if DWIN_ENABLED
         err = DWIN_SET(nct, sizeof(nct) / sizeof(nct[0]));
         delay(50);
         err = DWIN_SET(not_avail, sizeof(not_avail) / sizeof(not_avail[0]));
         delay(50);
-#endif
+        #endif
         if (counter_wifiNotConnected++ > 50) {
           counter_wifiNotConnected = 0;
 
@@ -378,6 +383,10 @@ void setup() {
   hspi = new SPIClass(HSPI); // Init SPI bus
   hspi->begin();
   pinMode(SS_EIC, OUTPUT); //HSPI SS Pin
+
+  //ARAI testing
+  //pinMode(SS_EIC_earth, OUTPUT); //HSPI SS Pin
+
 
   // SPI Enable for RFID
   hspiRfid = new SPIClass(HSPI);

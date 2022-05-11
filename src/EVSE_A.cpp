@@ -37,6 +37,8 @@ OnStartTransaction_A onStartTransaction_A;
 OnStopTransaction_A onStopTransaction_A;
 OnUnauthorizeUser_A onUnauthorizeUser_A;
 
+uint8_t currentCounterThreshold_A = 60;
+
 //timeout for heartbeat signal.
 ulong T_SENDHEARTBEAT = 60000;
 bool timeout_active_A =false;
@@ -682,7 +684,8 @@ void EVSE_A_loop() {
 				 Serial.println("Current A: "+ String(drawing_current_A));
 				 if(drawing_current_A <= 0.15){
 				 	counter_drawingCurrent_A++;
-				 	if(counter_drawingCurrent_A > 120){
+				 	//if(counter_drawingCurrent_A > 120){
+					if(counter_drawingCurrent_A > currentCounterThreshold_A){
 				 		counter_drawingCurrent_A = 0;
 						 reasonForStop = 1; // EV disconnected
 						 #if LCD_ENABLED
@@ -697,6 +700,7 @@ void EVSE_A_loop() {
 
 				 }else{
 				 	counter_drawingCurrent_A = 0;
+					currentCounterThreshold_A = 2;
 				 	Serial.println(F("counter_drawing Current Reset"));
 
 				 }
@@ -921,7 +925,7 @@ char *EVSE_A_getChargePointVendor() {
 }
 
 char *EVSE_A_getChargePointModel() {
-	return "AC001_3_0";
+	return "AC001_3_1";
 }
 
 String EVSE_A_getCurrnetIdTag(MFRC522 * mfrc522) {
@@ -1073,32 +1077,32 @@ void displayMeterValues(){
 
 #if DWIN_ENABLED
 uint8_t err = 0;
-  change_page[9] = 1;
+  change_page[9] = 4;
   v1[6] = instantVoltage_A >> 8;
   v1[7] = instantVoltage_A & 0xff;
-  v2[6] = instantVoltage_B >> 8;
+  /*v2[6] = instantVoltage_B >> 8;
   v2[7] = instantVoltage_B & 0xff;
   v3[6] = instantVoltage_C >> 8;
-  v3[7] = instantVoltage_C & 0xff;
+  v3[7] = instantVoltage_C & 0xff;*/
   i1[7] = instantCurrrent_A*10;
-  i2[7] = instantCurrrent_B*10;
-  i3[7] = instantCurrrent_C*10;
+  /*i2[7] = instantCurrrent_B*10;
+  i3[7] = instantCurrrent_C*10;*/
   e1[7] = instantPower_A*10;
-  e2[7] = instantPower_B*10;
-  e3[7] = instantPower_C*10;
+  //e2[7] = instantPower_B*10;
+  //e3[7] = instantPower_C*10;
   err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0])); // page 0
   delay(50);
-  err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0])); 
-  delay(50);
+  //err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0])); 
+  //delay(50);
   err = DWIN_SET(v1,sizeof(v1)/sizeof(v1[0])); 
-  err = DWIN_SET(v2,sizeof(v2)/sizeof(v2[0])); 
-  err = DWIN_SET(v3,sizeof(v3)/sizeof(v3[0])); 
+  //err = DWIN_SET(v2,sizeof(v2)/sizeof(v2[0])); 
+  //err = DWIN_SET(v3,sizeof(v3)/sizeof(v3[0])); 
   err = DWIN_SET(i1,sizeof(i1)/sizeof(i1[0])); 
-  err = DWIN_SET(i2,sizeof(i2)/sizeof(i2[0])); 
-  err = DWIN_SET(i3,sizeof(i3)/sizeof(i3[0])); 
+  //err = DWIN_SET(i2,sizeof(i2)/sizeof(i2[0])); 
+  //err = DWIN_SET(i3,sizeof(i3)/sizeof(i3[0])); 
   err = DWIN_SET(e1,sizeof(e1)/sizeof(e1[0])); 
-  err = DWIN_SET(e2,sizeof(e2)/sizeof(e2[0])); 
-  err = DWIN_SET(e3,sizeof(e3)/sizeof(e3[0])); 
+  //err = DWIN_SET(e2,sizeof(e2)/sizeof(e2[0])); 
+  //err = DWIN_SET(e3,sizeof(e3)/sizeof(e3[0])); 
   
 #endif
 	}

@@ -37,6 +37,10 @@ extern unsigned long st_timeC;
 extern uint8_t reasonForStop;
 static const char *resonofstop_str[] = { "EmergencyStop", "EVDisconnected" , "HardReset", "Local" , "Other" , "PowerLoss", "Reboot","Remote", "SoftReset","UnlockCommand","DeAuthorized"};
 
+extern uint8_t currentCounterThreshold_A;
+extern uint8_t currentCounterThreshold_B;
+extern uint8_t currentCounterThreshold_C;
+
 StopTransaction::StopTransaction(String idTag, int transactionId, int connectorId) {
 this->idTag = idTag;
 this->transactionId = transactionId;
@@ -74,6 +78,7 @@ DynamicJsonDocument* StopTransaction::createReq() {
     if(connectorId == 1){
       meterStop = getMeteringService()->currentEnergy_A();
       stop_time = millis();
+      currentCounterThreshold_A = 60;
       //Add that stop lcd display over here
   #if LCD_ENABLED
   lcd.clear();
@@ -128,6 +133,7 @@ DynamicJsonDocument* StopTransaction::createReq() {
     }else if(connectorId == 2){
       meterStop = getMeteringService()->currentEnergy_B();
       stop_time = millis();
+      currentCounterThreshold_B = 60;
         //Add that stop lcd display over here
   #if LCD_ENABLED
   lcd.clear();
@@ -179,6 +185,8 @@ uint8_t err = 0;
     }else if(connectorId == 3){
       meterStop = getMeteringService()->currentEnergy_C();
       stop_time = millis();
+      //reset the counter.
+      currentCounterThreshold_C = 60;
         //Add that stop lcd display over here
   #if LCD_ENABLED
   lcd.clear();
