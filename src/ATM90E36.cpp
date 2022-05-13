@@ -12,6 +12,7 @@ extern unsigned char fault_overCurr[28];
 extern unsigned char fault_underCurr[28]; 
 extern unsigned char fault_suspEV[28];
 extern unsigned char fault_suspEVSE[28];
+extern unsigned char charging[28];
 #endif
 
 ATM90E36::ATM90E36(int pin) 	// Object
@@ -130,7 +131,7 @@ double  ATM90E36::GetLineVoltageA() {
 	  getChargePointStatusService_A()->setUnderVoltage(true);
 	  getChargePointStatusService_A()->setOverVoltage(false);
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X14;
+    fault_underVolt[4] = 0X66;
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
 	  if(DEBUG_OUT) Serial.println(F("[EVSE_A] Under Voltage"));
@@ -139,7 +140,7 @@ double  ATM90E36::GetLineVoltageA() {
 	  getChargePointStatusService_A()->setUnderVoltage(false);
 	  getChargePointStatusService_A()->setOverVoltage(true);
     #if DWIN_ENABLED
-    fault_overVolt[4] = 0X14;
+    fault_overVolt[4] = 0X66;
     err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
     #endif
 	  if(DEBUG_OUT) Serial.println(F("[EVSE_A] Over Voltage"));
@@ -148,6 +149,10 @@ double  ATM90E36::GetLineVoltageA() {
 	  getChargePointStatusService_A()->setUnderVoltage(false);
 	  getChargePointStatusService_A()->setOverVoltage(false);
 	  if(DEBUG_OUT) Serial.println(F("[EVSE_A] Normal Voltage Range."));
+    #if DWIN_ENABLED
+    charging[4] = 0X66;
+    err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+    #endif
 	  return custom_round(volt);
   }  
 }
@@ -160,7 +165,7 @@ double  ATM90E36::GetLineVoltageB() {
 	  getChargePointStatusService_B()->setUnderVoltage(true);
 	  getChargePointStatusService_B()->setOverVoltage(false);
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X57;
+    fault_underVolt[4] = 0X71;
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
     if(DEBUG_OUT) Serial.println(F("[EVSE_B] Under Voltage"));
@@ -169,7 +174,7 @@ double  ATM90E36::GetLineVoltageB() {
 	  getChargePointStatusService_B()->setUnderVoltage(false);
 	  getChargePointStatusService_B()->setOverVoltage(true);
     #if DWIN_ENABLED
-    fault_overVolt[4] = 0X57;
+    fault_overVolt[4] = 0X71;
     err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
     #endif
     if(DEBUG_OUT) Serial.println(F("[EVSE_B] Over Voltage"));
@@ -178,6 +183,10 @@ double  ATM90E36::GetLineVoltageB() {
 	  getChargePointStatusService_B()->setUnderVoltage(false);
 	  getChargePointStatusService_B()->setOverVoltage(false);
     if(DEBUG_OUT) Serial.println(F("[EVSE_B] Normal Voltage Range."));
+    #if DWIN_ENABLED
+    charging[4] = 0X71;
+    err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+    #endif
 	  return custom_round(volt);
   }
 }
@@ -191,7 +200,7 @@ double  ATM90E36::GetLineVoltageC() {
 	  getChargePointStatusService_C()->setOverVoltage(false);
     if(DEBUG_OUT) Serial.println(F("[EVSE_C] Under Voltage"));
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X34;
+    fault_underVolt[4] = 0X7B;
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
 	  return custom_round(volt);
@@ -200,7 +209,7 @@ double  ATM90E36::GetLineVoltageC() {
 	  getChargePointStatusService_C()->setOverVoltage(true);
     if(DEBUG_OUT) Serial.println(F("[EVSE_C] Over Voltage"));
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X34;
+    fault_underVolt[4] = 0X7B;
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
 	  return custom_round(volt);
@@ -208,6 +217,10 @@ double  ATM90E36::GetLineVoltageC() {
 	  getChargePointStatusService_C()->setUnderVoltage(false);
 	  getChargePointStatusService_C()->setOverVoltage(false);
     if(DEBUG_OUT) Serial.println(F("[EVSE_C] Normal Voltage Range."));
+     #if DWIN_ENABLED
+    charging[4] = 0X7B;
+    err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+    #endif
 	  return custom_round(volt);
   }
 }
@@ -228,12 +241,16 @@ double ATM90E36::GetLineCurrentA() {
 		getChargePointStatusService_A()->setOverCurrent(true);
     Serial.println(F("[EVSE_A] Over Current"));
     #if DWIN_ENABLED
-    fault_overCurr[4] = 0X40;
+    fault_overCurr[4] = 0X66;
     err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     #endif
 		return custom_round(curr);
 	} else {
 		getChargePointStatusService_A()->setOverCurrent(false);
+     #if DWIN_ENABLED
+    charging[4] = 0X66;
+    //err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+    #endif
 		return custom_round(curr);
 	}
 }
@@ -253,12 +270,16 @@ double ATM90E36::GetLineCurrentB() {
     getChargePointStatusService_B()->setOverCurrent(true);
     Serial.println(F("[EVSE_B] Over Current"));
     #if DWIN_ENABLED
-    fault_overCurr[4] = 0X28;
+    fault_overCurr[4] = 0X71;
     err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     #endif
     return custom_round(curr);
   } else {
     getChargePointStatusService_B()->setOverCurrent(false);
+    #if DWIN_ENABLED
+    charging[4] = 0X71;
+    //err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+    #endif
     return custom_round(curr);
   }
 }
@@ -280,12 +301,16 @@ double ATM90E36::GetLineCurrentC() {
     getChargePointStatusService_C()->setOverCurrent(true);
     Serial.println(F("[EVSE_A] Over Current"));
     #if DWIN_ENABLED
-    fault_overCurr[4] = 0X90;
+    fault_overCurr[4] = 0X7B;
     err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     #endif
     return custom_round(curr);
   } else {
     getChargePointStatusService_C()->setOverCurrent(false);
+     #if DWIN_ENABLED
+    charging[4] = 0X7B;
+    //err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+    #endif
     return custom_round(curr);
   }
 
@@ -450,7 +475,7 @@ double ATM90E36::GetTemperature() {
 	  getChargePointStatusService_A()->setOverTemperature(false);
 	  if(DEBUG_OUT) Serial.println("Under Temperature"+String(temp));
     #if DWIN_ENABLED
-    fault_overTemp[4] = 0X14;
+    fault_overTemp[4] = 0X66;
     err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
     #endif
 	  return temp;
@@ -459,7 +484,7 @@ double ATM90E36::GetTemperature() {
 	  getChargePointStatusService_A()->setOverTemperature(true);
 	  if(DEBUG_OUT) Serial.println("Over Temperature"+String(temp));
     #if DWIN_ENABLED
-    fault_overTemp[4] = 0X14;
+    fault_overTemp[4] = 0X66;
     err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
     #endif
 	  return temp;
@@ -467,6 +492,10 @@ double ATM90E36::GetTemperature() {
 	  getChargePointStatusService_A()->setUnderTemperature(false);
 	  getChargePointStatusService_A()->setOverTemperature(false);
 	  if(DEBUG_OUT) Serial.println("Normal Temperature: "+String(temp));
+     #if DWIN_ENABLED
+    charging[4] = 0X66;
+    err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+    #endif
 	  return temp;
   }  
 }

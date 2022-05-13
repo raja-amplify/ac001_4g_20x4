@@ -17,6 +17,7 @@ extern unsigned char e3[8];
 extern unsigned char change_page[10];
 extern unsigned char avail[22];
 extern unsigned char charging[28];
+extern unsigned char cid3[7];
 #endif
 
 uint8_t currentCounterThreshold_C = 60;
@@ -1025,14 +1026,20 @@ uint8_t err = 0;
   v1[7] = instantVoltage_A & 0xff;
   v2[6] = instantVoltage_B >> 8;
   v2[7] = instantVoltage_B & 0xff;*/
+  v3[4] = 0X7F;
+  instantVoltage_C = instantVoltage_C * 10;
   v3[6] = instantVoltage_C >> 8;
   v3[7] = instantVoltage_C & 0xff;
   //i1[7] = instantCurrrent_A*10;
   //i2[7] = instantCurrrent_B*10;
+  i3[4] = 0X82;
   i3[7] = instantCurrrent_C*10;
   //e1[7] = instantPower_A*10;
   //e2[7] = instantPower_B*10;
+  e3[4] = 0X84;
   e3[7] = instantPower_C*10;
+  err = DWIN_SET(cid3,sizeof(cid3)/sizeof(cid3[0]));
+  delay(50);
   err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0])); // page 0
   delay(50);
   //err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0])); 
@@ -1046,6 +1053,8 @@ uint8_t err = 0;
   //err = DWIN_SET(e1,sizeof(e1)/sizeof(e1[0])); 
   //err = DWIN_SET(e2,sizeof(e2)/sizeof(e2[0])); 
   err = DWIN_SET(e3,sizeof(e3)/sizeof(e3[0])); 
+
+  delay(500);
   
 #endif
 	}

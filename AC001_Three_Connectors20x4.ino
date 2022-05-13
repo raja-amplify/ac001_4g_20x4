@@ -175,11 +175,15 @@ void setup() {
   dwin_setup();
   change_page[9] = 0;
   err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0])); // page 0
-  delay(50);
+  delay(10);
   err = DWIN_SET(not_avail, sizeof(not_avail) / sizeof(not_avail[0])); // status not available
-  delay(50);
+  delay(10);
+  err = DWIN_SET(not_avail, sizeof(not_avail) / sizeof(not_avail[0])); // status not available
+  delay(10);
   err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0])); // cloud: not connected
-  delay(50);
+  delay(10);
+  err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0])); // cloud: not connected
+  delay(10);
 #endif
 
   for (uint8_t t = 4; t > 0; t--) {
@@ -284,6 +288,10 @@ void setup() {
     delay(50);
     err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0]));
     delay(50);
+    err = DWIN_SET(nct, sizeof(nct) / sizeof(nct[0]));
+    delay(50);
+    err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0]));
+    delay(50);
 #endif
     bluetooth_Loop();
     if (wifi_enable == true && wifi_connect == true) {
@@ -318,12 +326,12 @@ void setup() {
         bluetooth_Loop();
         wifi_Loop();
         Serial.println("Wifi Not Connected: " + String(counter_wifiNotConnected));
-        #if DWIN_ENABLED
+#if DWIN_ENABLED
         err = DWIN_SET(nct, sizeof(nct) / sizeof(nct[0]));
         delay(50);
         err = DWIN_SET(not_avail, sizeof(not_avail) / sizeof(not_avail[0]));
         delay(50);
-        #endif
+#endif
         if (counter_wifiNotConnected++ > 50) {
           counter_wifiNotConnected = 0;
 
@@ -430,11 +438,15 @@ void setup() {
 
   Serial.println(F("End of Setup"));
   startBLETime = millis();
+#if DWIN_ENABLED
+  err = DWIN_SET(clear_tap_rfid, sizeof(clear_tap_rfid) / sizeof(clear_tap_rfid[0]));
+  delay(50);
+  err = DWIN_SET(tap_rfid, sizeof(tap_rfid) / sizeof(tap_rfid[0]));
+  delay(50);
 
-   err = DWIN_SET(clear_tap_rfid, sizeof(clear_tap_rfid) / sizeof(clear_tap_rfid[0]));
-   delay(50);
-   err = DWIN_SET(tap_rfid, sizeof(tap_rfid) / sizeof(tap_rfid[0]));
-   delay(50);
+  err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+  delay(50);
+#endif
 }
 
 
@@ -548,7 +560,7 @@ bool assignEvseToConnector(String readIdTag, int readConnectorVal) {
     if (getChargePointStatusService_A()->getIdTag() == readIdTag && getChargePointStatusService_A()->getTransactionId() != -1) {
       //stop session
       Serial.println(F("[EVSE_A] Stopping Transaction with RFID TAP"));
-    
+
       EVSE_A_StopSession();
       status = true;
     } else if (getChargePointStatusService_A()->inferenceStatus() == ChargePointStatus::Available) {

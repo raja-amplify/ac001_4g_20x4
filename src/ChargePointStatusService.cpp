@@ -385,10 +385,7 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 				/*lcd.clear();
  				lcd.setCursor(0, 0);
 				lcd.print("STATUS: CHARGING");*/
-				#if DWIN_ENABLED
-				uint8_t err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
-				delay(10);
-				#endif
+				
 			
 		}
 	} 
