@@ -510,6 +510,8 @@ void loop() {
 
 }
 
+
+#if DWIN_ENABLED
 /***************************************EVSE_READINPUT BLOCK*********************************************************/
 String readIdTag = "";
 void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only if there is Internet
@@ -552,6 +554,37 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
   }
   delay(100);
 }
+
+#else
+
+/***************************************EVSE_READINPUT BLOCK*********************************************************/
+String readIdTag = "";
+void EVSE_ReadInput(MFRC522* mfrc522){     // this funtion should be called only if there is Internet
+  readIdTag = "";
+  int readConnectorVal = 0;
+  readIdTag = readRfidTag(true, mfrc522);
+  if(readIdTag.equals("") == false){
+  	//EVSE_StopTxnRfid(readIdTag);
+    readConnectorVal = requestConnectorStatus();
+
+    if(readConnectorVal > 0){
+      bool result = assignEvseToConnector(readIdTag, readConnectorVal);
+      if(result == true){
+        Serial.println(F("Attached/Detached EVSE to the requested connector"));
+      }else{
+        Serial.println(F("Unable To attach/detach EVSE to the requested connector"));
+      }
+    }else{
+      Serial.println(F("Invalid Connector Id Received"));
+      delay(2000);
+    }
+
+  }
+delay(100);
+}
+
+#endif
+
 
 bool assignEvseToConnector(String readIdTag, int readConnectorVal) {
   bool status = false;

@@ -80,7 +80,7 @@ DynamicJsonDocument* MeterValues::createReq() {
     JsonArray sampledValue = meterValue.createNestedArray("sampledValue");
     if (power.size() - 1 >= i) {
       JsonObject sampledValue_1 = sampledValue.createNestedObject();
-      sampledValue_1["value"] = power.get(i);
+      sampledValue_1["value"] = String(power.get(i));
       sampledValue_1["context"] = "Sample.Clock";
       sampledValue_1["format"] = "Raw";
       sampledValue_1["measurand"] = "Power.Active.Import";
@@ -97,7 +97,7 @@ DynamicJsonDocument* MeterValues::createReq() {
     }
     if (energy.size() - 1 >= i) {
       JsonObject sampledValue_2 = sampledValue.createNestedObject();
-      sampledValue_2["value"] = energy.get(i);
+      sampledValue_2["value"] = String(energy.get(i));
       sampledValue_2["context"] = "Sample.Clock";
       sampledValue_2["format"] = "Raw";
       sampledValue_2["measurand"] = "Energy.Active.Import.Register";
@@ -114,7 +114,7 @@ DynamicJsonDocument* MeterValues::createReq() {
     }
 	if (voltage.size() - 1 >= i) {
       JsonObject sampledValue_3 = sampledValue.createNestedObject();
-      sampledValue_3["value"] = voltage.get(i);
+      sampledValue_3["value"] = String(voltage.get(i));
       sampledValue_3["context"] = "Sample.Clock";
       sampledValue_3["format"] = "Raw";
       sampledValue_3["measurand"] = "Voltage";
@@ -131,7 +131,7 @@ DynamicJsonDocument* MeterValues::createReq() {
     }
 	if (current.size() - 1 >= i) {
       JsonObject sampledValue_4 = sampledValue.createNestedObject();
-      sampledValue_4["value"] = current.get(i);
+      sampledValue_4["value"] = String(current.get(i));
       sampledValue_4["context"] = "Sample.Clock";
       sampledValue_4["format"] = "Raw";
       sampledValue_4["measurand"] = "Current.Import";
@@ -148,7 +148,7 @@ DynamicJsonDocument* MeterValues::createReq() {
     }	
 	if (temperature.size() - 1 >= i) {
       JsonObject sampledValue_5 = sampledValue.createNestedObject();
-      sampledValue_5["value"] = temperature.get(i);
+      sampledValue_5["value"] = String(temperature.get(i));
       sampledValue_5["context"] = "Sample.Clock";
       sampledValue_5["format"] = "Raw";
       sampledValue_5["measurand"] = "Temperature";

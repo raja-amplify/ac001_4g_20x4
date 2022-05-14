@@ -317,6 +317,7 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		//err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
 		delay(10);
 		#endif
+		if(reasonForStop!= 3 || reasonForStop!= 4)
 		reasonForStop = EVDisconnected;
 
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true || getChargePointStatusService_B()->getOverCurrent() == true || getChargePointStatusService_C()->getOverCurrent() == true){

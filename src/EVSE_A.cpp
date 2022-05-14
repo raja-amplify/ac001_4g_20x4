@@ -40,6 +40,9 @@ OnUnauthorizeUser_A onUnauthorizeUser_A;
 
 uint8_t currentCounterThreshold_A = 60;
 
+ulong timerHb = 0;
+unsigned int heartbeatInterval = 50;
+
 //timeout for heartbeat signal.
 ulong T_SENDHEARTBEAT = 60000;
 bool timeout_active_A =false;
@@ -58,6 +61,9 @@ bool flag_evseStopTransaction_A;
 bool flag_evseUnauthorise_A;
 bool flag_rebootRequired_A;
 bool flag_evseSoftReset_A; //added by @Wamique
+
+
+
 
 extern ATM90E36 eic;
 extern bool flag_rebootRequired_B;
@@ -523,9 +529,13 @@ void EVSE_A_loop() {
 		if (flag_evseReadIdTag_A == true) {
 			if (onReadUserId_A != NULL) {
 				onReadUserId_A();
-				if(millis() - t > 5000){
-					t= millis();
-				//	onSendHeartbeat_A();
+				//if(millis() - t > 5000){
+					//t= millis();
+				//Added by G. Raja Sumant - 14/05/2022
+				if(millis() - timerHb > (heartbeatInterval * 1000)){
+					timerHb = millis();
+					//onSendHeartbeat();
+					onSendHeartbeat_A();
 				}
 			}
 			return;
@@ -688,6 +698,7 @@ void EVSE_A_loop() {
 				 	//if(counter_drawingCurrent_A > 120){
 					if(counter_drawingCurrent_A > currentCounterThreshold_A){
 				 		counter_drawingCurrent_A = 0;
+						 if(reasonForStop!= 3 || reasonForStop!= 4)
 						 reasonForStop = 1; // EV disconnected
 						 #if LCD_ENABLED
   						lcd.clear();
