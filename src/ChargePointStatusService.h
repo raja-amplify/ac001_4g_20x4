@@ -31,6 +31,7 @@ private:
 	bool evseOffersEnergy = false;
 	bool overVoltage = false;
 	bool underVoltage = false;
+	bool EarthDisconnect = false;
 	bool overTemperature = false;
 	bool underTemperature = false;
 	bool overCurrent = false;
@@ -53,6 +54,8 @@ public:
 	void setUnderVoltage(bool uv);
 	bool getOverCurrent();
 	void setOverCurrent(bool oc);
+	void setEarthDisconnect(bool ed);
+	bool getEarthDisconnect();
 	bool getUnderCurrent();
 	void setUnderCurrent(bool uc);
 	bool getOverTemperature();

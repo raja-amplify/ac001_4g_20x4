@@ -99,6 +99,7 @@ DynamicJsonDocument* StopTransaction::createReq() {
   int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
   String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
   lcd.print(String(hrMinSec));
+   delay(5000);
 	#endif
   #if DWIN_ENABLED
   uint8_t err = 0;
@@ -154,6 +155,7 @@ DynamicJsonDocument* StopTransaction::createReq() {
   int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
   String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
   lcd.print(String(hrMinSec));
+   delay(5000);
 	#endif
   
   #if DWIN_ENABLED
@@ -207,6 +209,7 @@ uint8_t err = 0;
   int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
   String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
   lcd.print(String(hrMinSec));
+  delay(5000);
 	#endif
 
   #if DWIN_ENABLED
@@ -254,8 +257,7 @@ uint8_t err = 0;
   Serial.printf("[StopTransaction] reason for stop : %d", reasonForStop);
   payload["reason"] = resonofstop_str[reasonForStop];
 
-  //Clearing the reason.
- reasonForStop = 3;
+  
 
   
 
@@ -283,6 +285,9 @@ void StopTransaction::processConf(JsonObject payload) {
   }
 
   if (DEBUG_OUT) Serial.print(F("[StopTransaction] Request has been accepted!\n"));
+
+  //Clearing the reason.
+ reasonForStop = 3;
 
 }
 

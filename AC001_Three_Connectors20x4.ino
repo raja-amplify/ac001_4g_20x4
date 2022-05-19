@@ -77,7 +77,15 @@ extern unsigned char not_avail[22]; // not available
 extern unsigned char change_page[10];
 extern unsigned char tap_rfid[30];
 extern unsigned char clear_tap_rfid[30];
+extern unsigned char CONN_UNAVAIL[28];
+extern bool flag_faultOccured_A;
+extern bool flag_faultOccured_B;
+extern bool flag_faultOccured_C;
 #endif
+
+extern bool notFaulty_A;
+extern bool notFaulty_B;
+extern bool notFaulty_C;
 
 WebSocketsClient webSocket;
 
@@ -150,6 +158,7 @@ void setup() {
   //  pinMode(16,OUTPUT);
   Serial.begin(115200);
   Master_setup();
+  pinMode(23,INPUT); // Earth detection.
   //https://arduino-esp8266.readthedocs.io/en/latest/Troubleshooting/debugging.html
   Serial.setDebugOutput(true);
 #if LCD_ENABLED
@@ -184,6 +193,8 @@ void setup() {
   delay(10);
   err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0])); // cloud: not connected
   delay(10);
+  err = DWIN_SET(clear_tap_rfid, sizeof(clear_tap_rfid) / sizeof(clear_tap_rfid[0]));
+  delay(50);
 #endif
 
   for (uint8_t t = 4; t > 0; t--) {
@@ -377,6 +388,10 @@ void setup() {
 #if DWIN_ENABLED
         err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
         delay(50);
+        err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+        delay(50);
+        err = DWIN_SET(g, sizeof(g) / sizeof(g[0]));
+        delay(50);
         err = DWIN_SET(g, sizeof(g) / sizeof(g[0]));
         delay(50);
 #endif
@@ -473,7 +488,9 @@ void loop() {
     }
   }
 #endif
-
+#if DWIN_ENABLED
+  display_avail();
+#endif
   ocppEngine_loop();
 
   emergencyRelayClose_Loop_A();
@@ -517,7 +534,7 @@ String readIdTag = "";
 void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only if there is Internet
   readIdTag = "";
   unsigned long tout = millis();
-  uint8_t readConnectorVal = 0;
+  int8_t readConnectorVal = 0;
   readIdTag = readRfidTag(true, mfrc522);
   if (readIdTag.equals("") == false) {
     //EVSE_StopTxnRfid(readIdTag);
@@ -542,49 +559,136 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
           break;
         } else {
           Serial.println(F("Unable To attach/detach EVSE to the requested connector"));
+          //err = DWIN_SET(CONN_UNAVAIL, sizeof(CONN_UNAVAIL) / sizeof(CONN_UNAVAIL[0]));
+          //delay(10);
+
           //break;
         }
       } else {
         Serial.println(F("Invalid Connector Id Received"));
+        /*err = DWIN_SET(CONN_UNAVAIL, sizeof(CONN_UNAVAIL) / sizeof(CONN_UNAVAIL[0]));
+          delay(10);
+          change_page[9] = 0; // change to page 3 and wait for input
+          uint8_t err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+          delay(10);*/
         //break;
         //delay(2000);
       }
     }
 #endif
   }
-  delay(100);
+  //delay(100);
+  /*  uint8_t err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+    delay(10);
+    change_page[9] = 0; // change to page 0 and wait for input
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);
+
+    change_page[9] = 0; // change to page 0 and wait for input
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);
+
+    change_page[9] = 0; // change to page 0 and wait for input
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);*/
+
 }
 
 #else
 
 /***************************************EVSE_READINPUT BLOCK*********************************************************/
 String readIdTag = "";
-void EVSE_ReadInput(MFRC522* mfrc522){     // this funtion should be called only if there is Internet
+void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only if there is Internet
   readIdTag = "";
   int readConnectorVal = 0;
   readIdTag = readRfidTag(true, mfrc522);
-  if(readIdTag.equals("") == false){
-  	//EVSE_StopTxnRfid(readIdTag);
+  if (readIdTag.equals("") == false) {
+    //EVSE_StopTxnRfid(readIdTag);
+    #if LCD_ENABLED
+        lcd.clear();
+
+        lcd.setCursor(0, 1);
+        lcd.print("SCAN DONE.");
+        lcd.setCursor(0, 2);
+        lcd.print("SELECT CONNECTOR");
+    #endif
+
     readConnectorVal = requestConnectorStatus();
 
-    if(readConnectorVal > 0){
+    if (readConnectorVal > 0) {
       bool result = assignEvseToConnector(readIdTag, readConnectorVal);
-      if(result == true){
+      if (result == true) {
         Serial.println(F("Attached/Detached EVSE to the requested connector"));
-      }else{
+        #if LCD_ENABLED
+        lcd.clear();
+
+        lcd.setCursor(0, 1);
+        lcd.print("ATTACHED");
+        lcd.setCursor(0, 2);
+        lcd.print("PLEASE WAIT");
+    #endif
+      } else {
         Serial.println(F("Unable To attach/detach EVSE to the requested connector"));
+         #if LCD_ENABLED
+        lcd.clear();
+
+        lcd.setCursor(0, 1);
+        lcd.print("UNABLE TO");
+        lcd.setCursor(0, 2);
+        lcd.print("ATTACH!");
+    #endif
       }
-    }else{
+    } else {
       Serial.println(F("Invalid Connector Id Received"));
+       #if LCD_ENABLED
+        lcd.clear();
+
+        lcd.setCursor(0, 1);
+        lcd.print("INVALID CONNECTOR");
+        lcd.setCursor(0, 2);
+        lcd.print("RECEIVED");
+    #endif
       delay(2000);
     }
 
   }
-delay(100);
+  delay(100);
 }
 
 #endif
 
+#if DWIN_ENABLED
+void display_avail()
+{
+  if (notFaulty_A)
+  {
+    if (notFaulty_B)
+    {
+      if (notFaulty_C)
+      {
+        avail[4] = 0X51; 
+        uint8_t err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+        delay(10);
+        avail[4] = 0X51;
+        err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+        delay(10);
+      }
+      else
+      {
+        Serial.println(F("****Display c faulty****"));
+      }
+    }
+    else
+    {
+      Serial.println(F("****Display B faulty****"));
+    }
+  }
+  else
+  {
+    Serial.println(F("****Display A faulty****"));
+  }
+}
+#endif
 
 bool assignEvseToConnector(String readIdTag, int readConnectorVal) {
   bool status = false;
@@ -695,6 +799,7 @@ int8_t dwin_input()
 
   button = DWIN_read();
   Serial.printf("Button pressed : %d", button);
+  //delay(50);
   return button;
 
 }
@@ -719,8 +824,9 @@ void wifi_Loop() {
 //#endif
 short int counterPing = 0;
 void cloudConnectivityLed_Loop() {
-
-
+#if DWIN_ENABLED
+uint8_t err = 0 ;
+#endif
   if (wifi_connect == true) {
     if (counterPing++ >= 3) { // sending ping after every 30 sec [if internet is not there sending ping packet itself consumes 10sec]
       isInternetConnected = webSocket.sendPing();
@@ -729,20 +835,57 @@ void cloudConnectivityLed_Loop() {
     }
     if ((WiFi.status() != WL_CONNECTED || webSocketConncted == false || isInternetConnected == false ) && getChargePointStatusService_A()->getEmergencyRelayClose() == false) { //priority is on fault
       if (millis() - timercloudconnect > 10000) { //updates in 5sec
+      #if LCD_ENABLED
+      lcd.clear();
+ 	  	lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+			lcd.print("STATUS: UNAVAILABLE");
+			//lcd.setCursor(0, 1);
+			//lcd.print("TAP RFID/SCAN QR");
+			lcd.setCursor(0, 2);
+			lcd.print("CONNECTION");
+			lcd.setCursor(0, 3);
+			lcd.print("CLOUD: offline");
+      #endif
 #if LED_ENABLED
         requestLed(BLINKYWHITE_ALL, START, 1);
+#endif
+#if DWIN_ENABLED
+ err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
 #endif
         timercloudconnect = millis();
       }
     }
+    #if DWIN_ENABLED
+  err = DWIN_SET(wi,sizeof(wi)/sizeof(wi[0]));
+  #endif
   } else if (gsm_connect == true && client.connected() ==  false && getChargePointStatusService_A()->getEmergencyRelayClose() == false) {
     if (millis() - timercloudconnect > 10000) { //updates in 5sec
+     #if LCD_ENABLED
+      lcd.clear();
+ 	  	lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+			lcd.print("STATUS: UNAVAILABLE");
+			//lcd.setCursor(0, 1);
+			//lcd.print("TAP RFID/SCAN QR");
+			lcd.setCursor(0, 2);
+			lcd.print("CONNECTION");
+			lcd.setCursor(0, 3);
+			lcd.print("CLOUD: offline");
+      #endif
 #if LED_ENABLED
       requestLed(BLINKYWHITE_ALL, START, 1);
+#endif
+#if DWIN_ENABLED
+ err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
 #endif
       timercloudconnect = millis();
 
     }
+  }
+  if(gsm_connect == true && client.connected() ==  true)
+  {
+     #if DWIN_ENABLED
+  err = DWIN_SET(g,sizeof(g)/sizeof(g[0]));
+  #endif
   }
 
 }

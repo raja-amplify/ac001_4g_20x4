@@ -21,7 +21,7 @@ extern unsigned char charging[28];
 extern unsigned char cid2[7];
 #endif
 
-uint8_t currentCounterThreshold_B = 60;
+uint8_t currentCounterThreshold_B = 30;
 
 OnBoot_B onBoot_B;
 OnReadUserId_B onReadUserId_B;
@@ -30,6 +30,8 @@ OnAuthentication_B onAuthentication_B;
 OnStartTransaction_B onStartTransaction_B;
 OnStopTransaction_B onStopTransaction_B;
 OnUnauthorizeUser_B onUnauthorizeUser_B;
+
+bool notFaulty_B = false;
 
 bool evIsPlugged_B; 
 bool flag_evseIsBooted_B;
@@ -47,6 +49,8 @@ extern bool flag_rebootRequired_A;
 
 //Reason for stop
 extern uint8_t reasonForStop;
+
+extern int8_t fault_code_B;
 
 float chargingLimit_B = 32.0f;
 String Ext_currentIdTag_B = "";
@@ -652,7 +656,7 @@ void EVSE_B_loop() {
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);
-  						lcd.print("no power drawn"); 
+  						lcd.print("EV DISCONNECTED"); 
 						#endif
 				 		Serial.println(F("Stopping session due to No current"));
 				 		EVSE_B_StopSession();
@@ -711,12 +715,13 @@ short EMGCY_counter_B =0;
 bool EMGCY_FaultOccured_B = false;
 
 void emergencyRelayClose_Loop_B(){
-	if(millis() - faultTimer_B > 2000){
+	if(millis() - faultTimer_B > 1000){
 		faultTimer_B = millis();
 		bool EMGCY_status_B = requestEmgyStatus();
 		//Serial.println("EMGCY_Status_B: "+String(EMGCY_status_B));
 		if(EMGCY_status_B == true){
-			if(EMGCY_counter_B++ > 0){
+			//if(EMGCY_counter_B++ > 0){
+			if(EMGCY_counter_B == 0){
 				requestForRelay(STOP,2);
 				requestLed(BLINKYRED,START,2);
 				getChargePointStatusService_B()->setEmergencyRelayClose(true);
@@ -750,7 +755,8 @@ void emergencyRelayClose_Loop_B(){
 					getChargePointStatusService_B()->getUnderTemperature() == true ||
 					getChargePointStatusService_B()->getOverTemperature() == true ||
 					getChargePointStatusService_B()->getOverCurrent() == true){
-						Serial.println("[EVSE_B] Fault Occurred.");						
+						Serial.println("[EVSE_B] Fault Occurred.");
+						notFaulty_B = false;						
 						getChargePointStatusService_B()->setEmergencyRelayClose(true);
 						if (!timer_initialize_B){
 							timeout_start_B = millis();
@@ -761,7 +767,8 @@ void emergencyRelayClose_Loop_B(){
 							getChargePointStatusService_B()->getUnderTemperature() == false &&
 							getChargePointStatusService_B()->getOverTemperature() == false &&
 							getChargePointStatusService_B()->getOverCurrent() == false){
-						Serial.println("[EVSE_B]Not Faulty.");						
+						Serial.println("[EVSE_B]Not Faulty.");	
+						notFaulty_B = true;					
 						getChargePointStatusService_B()->setEmergencyRelayClose(false);
 						//if (!timer_initialize){
 							timeout_start_B = 0;
@@ -965,17 +972,17 @@ void EVSE_B_Suspended(){
 #endif
 
 void displayMeterValuesB(){
-		if(millis() - timerDisplayB > 1000){
+		if(millis() - timerDisplayB > 10000){
 			timerDisplayB = millis();
-			float instantCurrrent_A = eic.GetLineCurrentA();
-			int instantVoltage_A  = eic.GetLineVoltageA();
+			/*float instantCurrrent_A = eic.GetLineCurrentA();
+			float instantVoltage_A  = eic.GetLineVoltageA();
 			float instantPower_A = 0.0f;
 
 			if(instantCurrrent_A < 0.15){
 				instantPower_A = 0;
 			}else{
 				instantPower_A = (instantCurrrent_A * instantVoltage_A)/1000.0;
-			}
+			}*/
 
 			float instantCurrrent_B = eic.GetLineCurrentB();
 			int instantVoltage_B  = eic.GetLineVoltageB();
@@ -987,7 +994,7 @@ void displayMeterValuesB(){
 				instantPower_B = (instantCurrrent_B * instantVoltage_B)/1000.0;
 			}
 
-			float instantCurrrent_C = eic.GetLineCurrentC();
+			/*float instantCurrrent_C = eic.GetLineCurrentC();
 			int instantVoltage_C = eic.GetLineVoltageC();
 			float instantPower_C = 0.0f;
 
@@ -995,12 +1002,40 @@ void displayMeterValuesB(){
 				instantPower_C = 0;
 			}else{
 				instantPower_C = (instantCurrrent_C * instantVoltage_C)/1000.0;
-			}
+			}*/
 			delay(100); // just for safety
 			#if LCD_ENABLED
   lcd.clear();
   lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-  lcd.print("******CHARGING******"); // You can make spaces using well... spaces
+  if (notFaulty_B)
+  {
+  lcd.print("*****CHARGING 2*****"); // You can make spaces using well... spaces
+  }
+  else
+  {
+	switch(fault_code_B)
+	{
+		case -1: break; //It means default. 
+		case 0: lcd.print("Connector2-Over Voltage");
+				break;
+		case 1: lcd.print("Connector2-Under Voltage");
+				break;
+		case 2: lcd.print("Connector2-Over Current");
+				break;
+		case 3: lcd.print("Connector2-Under Current");
+				break;
+		case 4: lcd.print("Connector2-Over Temp");
+				break;
+		case 5: lcd.print("Connector2-Over Temp");
+				break;
+		case 6: lcd.print("Connector2-GFCI"); // Not implemented in AC001
+				break;
+		case 7: lcd.print("Connector2-Earth Disc");
+				break;
+		default: lcd.print("*****FAULTED 2*****"); // You can make spaces using well... spacesbreak;
+	}
+  }
+  /*
   lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
   lcd.print("V:");
   lcd.setCursor(4, 1); // Or setting the cursor in the desired position.
@@ -1024,7 +1059,20 @@ void displayMeterValuesB(){
   lcd.setCursor(9, 3); // Or setting the cursor in the desired position.
   lcd.print(String(instantPower_B));
   lcd.setCursor(15, 3); // Or setting the cursor in the desired position.
-  lcd.print(String(instantPower_C));
+  lcd.print(String(instantPower_C));*/
+
+  lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+  lcd.print("VOLTAGE(v):");
+  lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
+  lcd.print(String(instantVoltage_B));
+  lcd.setCursor(0, 2);
+  lcd.print("CURRENT(A):");
+  lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
+  lcd.print(String(instantCurrrent_B)); 
+   lcd.setCursor(0, 3);
+  lcd.print("POWER(KW) :"); 
+  lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
+  lcd.print(String(instantPower_B));
 #endif
 
 #if DWIN_ENABLED
@@ -1047,9 +1095,14 @@ uint8_t err = 0;
   e2[7] = instantPower_B*10;
   //e3[7] = instantPower_C*10;
   err = DWIN_SET(cid2,sizeof(cid2)/sizeof(cid2[0]));
-  delay(50);
+  //delay(50);
   err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0])); // page 0
-  delay(50);
+  if (notFaulty_B)
+  {
+  charging[4] = 0X71;
+  err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0]));
+  }
+  //delay(50);
   //err = DWIN_SET(charging,sizeof(charging)/sizeof(charging[0])); 
   //delay(50);
   //err = DWIN_SET(v1,sizeof(v1)/sizeof(v1[0])); 

@@ -138,7 +138,8 @@ void ChargePointStatusService::loop() {
 			if(getChargePointStatusService_A()->getOverVoltage() == true || getChargePointStatusService_B()->getOverVoltage() == true || getChargePointStatusService_C()->getOverVoltage() == true){
 				reasonForStop = Other;
 				#if DWIN_ENABLED
-				//err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
+				fault_overVolt[4] = 0X51;
+				err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
 				delay(10);
 				#endif
 				
@@ -146,13 +147,15 @@ void ChargePointStatusService::loop() {
 		if(eic.GetLineVoltageA() < 190 && eic.GetLineVoltageA() > 50){
 			reasonForStop = Other;
 			#if DWIN_ENABLED
-			//err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+			fault_noearth[4] = 0X51;
+			err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
 			delay(10);
 			#endif
 			
 		}else{
 			#if DWIN_ENABLED
-			//err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+			fault_underVolt[4] = 0X51;
+			err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
 			delay(10);
 			#endif
 			reasonForStop = Other;
@@ -161,7 +164,8 @@ void ChargePointStatusService::loop() {
 
 	}else if(getChargePointStatusService_A()->getUnderCurrent() == true || getChargePointStatusService_B()->getUnderCurrent() == true || getChargePointStatusService_C()->getUnderCurrent() == true){
 		#if DWIN_ENABLED
-		//err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
+		fault_underCurr[4] = 0X51;
+		err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
 		delay(10);
 		#endif
 		reasonForStop = EVDisconnected;
@@ -169,13 +173,15 @@ void ChargePointStatusService::loop() {
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true || getChargePointStatusService_B()->getOverCurrent() == true || getChargePointStatusService_C()->getOverCurrent() == true){
 	reasonForStop = Other;
 	#if DWIN_ENABLED
-	//err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
+	fault_overCurr[4] = 0X51;
+	err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
 	delay(10);
 	#endif
 	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
 		reasonForStop = Other;
 		#if DWIN_ENABLED
-			//err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+			fault_overTemp[4] = 0X51;
+			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
 			delay(10);
 		#endif
 
@@ -183,14 +189,16 @@ void ChargePointStatusService::loop() {
 		reasonForStop = Other;
 
 		#if DWIN_ENABLED
-			//err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+			fault_overTemp[4] = 0X51;
+			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
 			delay(10);
 		#endif
 	}
 	else if(emergencyRelayClose){
 		reasonForStop = EmergencyStop;
 		#if DWIN_ENABLED
-			//err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
+			fault_emgy[4] = 0X51;
+			err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
 			delay(10);
 		#endif
 	}
@@ -214,7 +222,7 @@ void ChargePointStatusService::loop() {
 
 	}else if(getChargePointStatusService_A()->getUnderCurrent() == true){
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: UNDERCURRENT");
+		lcd.print("ERROR: UNDERCURRENT");
 
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true){
 		
@@ -222,15 +230,19 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 			lcd.print("ERROR: OVERCURRENT");
 	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: OVERTEMP");
+		lcd.print("ERROR: OVERTEMP");
 
 	}else if(getChargePointStatusService_A()->getOverTemperature() == true){
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: UNDERTEMP");
+		lcd.print("ERROR: UNDERTEMP");
+	}
+	else if(getChargePointStatusService_A()->getEarthDisconnect() == true){
+		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+	    lcd.print("ERROR: EARTH DISCONNECT");
 	}
 	else if(emergencyRelayClose){
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: EMERGENCY");
+		lcd.print("ERROR: EMERGENCY");
 	}
 	
 	#endif
@@ -248,16 +260,17 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 			lcd.print("CONNECTION");
 			lcd.setCursor(0, 3);
 			 if(wifi_connect)
-			 lcd.print("cloud: wifi");
+			 lcd.print("CLOUD: wifi");
             else if(gsm_connect)
-			lcd.print("cloud: 4G");
+			lcd.print("CLOUD: 4G");
 			else
-			lcd.print("cloud: offline");
+			lcd.print("CLOUD: offline");
 			#endif
 			
 			#if DWIN_ENABLED
 			change_page[9] = 0;
-			uint8_t err = DWIN_SET(avail,sizeof(avail)/sizeof(avail[0]));
+			avail[4] = 0X51;
+			//uint8_t err = DWIN_SET(avail,sizeof(avail)/sizeof(avail[0]));
 			delay(50);
 			err  = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
 			delay(50);
@@ -290,7 +303,8 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 			if(getChargePointStatusService_A()->getOverVoltage() == true || getChargePointStatusService_B()->getOverVoltage() == true || getChargePointStatusService_C()->getOverVoltage() == true){
 				reasonForStop = Other;
 				#if DWIN_ENABLED
-				//err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
+				fault_overVolt[4] = 0X51;
+				err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
 				delay(10);
 				#endif
 				
@@ -299,13 +313,15 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 			reasonForStop = Other;
 			getChargePointStatusService_A()->stopEvDrawsEnergy();
 			#if DWIN_ENABLED
-			//err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+			fault_noearth[4] = 0X51;
+			err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
 			delay(10);
 			#endif
 			
 		}else{
 			#if DWIN_ENABLED
-			//err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+			fault_underVolt[4] = 0X51;
+			err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
 			delay(10);
 			#endif
 			reasonForStop = Other;
@@ -314,7 +330,8 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 
 	}else if(getChargePointStatusService_A()->getUnderCurrent() == true || getChargePointStatusService_B()->getUnderCurrent() == true || getChargePointStatusService_C()->getUnderCurrent() == true){
 		#if DWIN_ENABLED
-		//err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
+		fault_underCurr[4] = 0X51;
+		err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
 		delay(10);
 		#endif
 		if(reasonForStop!= 3 || reasonForStop!= 4)
@@ -323,13 +340,15 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true || getChargePointStatusService_B()->getOverCurrent() == true || getChargePointStatusService_C()->getOverCurrent() == true){
 	reasonForStop = Other;
 	#if DWIN_ENABLED
-	//err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
+	fault_overCurr[4] = 0X51;
+	err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
 	delay(10);
 	#endif
 	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
 		reasonForStop = Other;
 		#if DWIN_ENABLED
-			//err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+			fault_overTemp[4] = 0X51;
+		    err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
 			delay(10);
 		#endif
 
@@ -337,7 +356,8 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		reasonForStop = Other;
 
 		#if DWIN_ENABLED
-			//err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+		fault_overTemp[4] = 0X51;
+			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
 			delay(10);
 		#endif
 
@@ -363,6 +383,7 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 					//reasonForStop = Local;
 
 					#if DWIN_ENABLED
+					fault_suspEV[4] = 0X51;
 					err = DWIN_SET(fault_suspEV,sizeof(fault_suspEV)/sizeof(fault_suspEV[0]));
 					delay(10);
 					#endif
@@ -376,6 +397,7 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 					lcd.print("STATUS: SUSPENDEDEVSE");
 					#endif
 					#if DWIN_ENABLED
+					fault_suspEVSE[4] = 0X51;
 					err = DWIN_SET(fault_suspEVSE,sizeof(fault_suspEVSE)/sizeof(fault_suspEVSE[0]));
 					delay(10);
 					#endif
@@ -449,6 +471,22 @@ bool ChargePointStatusService::getUnderVoltage(){
 
 void ChargePointStatusService::setUnderVoltage(bool uv){
 	this->underVoltage = uv;
+}
+
+/*
+* @brief: Earth fault detection using octocoupler
+* HCPL3700 - Logic 
+* INPUT OUTPUT
+  HIGH  LOW (EARTH PRESENCE)
+  LOW   HIGH(EARTH ABSENCE)
+*/ 
+
+void ChargePointStatusService::setEarthDisconnect(bool ed){
+	this->EarthDisconnect = ed;
+}
+
+bool ChargePointStatusService::getEarthDisconnect(){
+	return EarthDisconnect;
 }
 
 bool ChargePointStatusService::getOverTemperature(){

@@ -46,5 +46,6 @@ int8_t DWIN_read();
 uint8_t DWIN_SET(unsigned char *,size_t);
 void dwin_setup();
 void flush_dwin();
+int8_t flush_readResp();
 
 #endif

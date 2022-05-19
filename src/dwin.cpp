@@ -23,7 +23,9 @@
 #include "dwin.h"
 
 //Object instantiation should always take place in the cpp file
-SoftwareSerial dwin(27,26);
+//SoftwareSerial dwin(27,26);
+
+#define dwin Serial1
 
 unsigned char Buffer[80]; 
 unsigned char Buffer_Len = 0;
@@ -48,7 +50,7 @@ unsigned char fault_overCurr[28] =  {0X5A, 0XA5, 0X19, 0X82,0X51,0X00,0X66,0X61,
 unsigned char fault_underCurr[28] = {0X5A, 0XA5, 0X19, 0X82,0X51,0X00,0X66,0X61,0X75,0X6c,0X74,0X20,0X75,0X6e,0X64,0X65,0X72,0X20,0X63,0X75,0X72,0X72,0X65,0X6e,0X74,0XFF,0XFF,0X20}; 
 unsigned char fault_suspEV[28]    = {0X5A, 0XA5, 0X19, 0X82,0X51,0X00,0X53,0X55,0X53,0X50,0X45,0X4e,0X44,0X45,0X44,0X20,0X45,0X56,0XFF,0XFF,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20}; 
 unsigned char fault_suspEVSE[28]  = {0X5A, 0XA5, 0X19, 0X82,0X51,0X00,0X53,0X55,0X53,0X50,0X45,0X4e,0X44,0X45,0X44,0X20,0X45,0X56,0X53,0X45,0XFF,0XFF,0X20,0X20,0X20,0X20,0X20,0X20}; 
-
+unsigned char CONN_UNAVAIL[28]    = {0X5A, 0XA5, 0X19, 0X82,0X51,0X00,0X43,0X4f,0X4e,0X4e,0X45,0X43,0X54,0X4f,0X52,0X20,0X55,0X4e,0X41,0X56,0X41,0X49,0X4c,0X41,0X42,0X4c,0X45,0X20}; 
 
 /*
 
@@ -102,7 +104,7 @@ unsigned char charging[28]        = {0X5A, 0XA5, 0X19, 0X82,0X52,0X00,0X43,0X48,
 unsigned char ct[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//connected
 unsigned char nct[22] =  {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X6E,0X6F,0X74,0X20,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0X20,0X20,0X20};//not connected 
 unsigned char et[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X52,0X00,0X45,0X74,0X68,0X65,0X72,0X6E,0X65,0X74,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//ethernet
-unsigned char wi[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X57,0X69,0X66,0X69,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//wifi
+unsigned char wi[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X57,0X49,0X46,0X49,0XFF,0XFF,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//wifi
 unsigned char tr[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X54,0X00,0X54,0X61,0X70,0X20,0X52,0X46,0X49,0X44,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//tap rfid
 unsigned char utr[22] =  {0X5A, 0XA5, 0X13, 0X82,0X54,0X00,0X52,0X46,0X49,0X44,0X20,0X75,0X6E,0X61,0X76,0X61,0X69,0X6C,0X61,0X6C,0X65,0X20};//rfid unavailable
 unsigned char g[22] =    {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X34,0X47,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20,0X20};//4g
@@ -114,8 +116,10 @@ unsigned char clear_tap_rfid[30] =  {0X5A, 0XA5, 0X1B, 0X82,0X53,0X00, 0X20,0X20
 
 
 
-unsigned char clu[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0XFF,0XFF,0X20,0X20,0X20,0X20,0X20};//connected
-unsigned char clun[22] =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X6E,0X6F,0X74,0X20,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0XFF,0XFF,0X20};//not connected 
+//unsigned char clu[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0XFF,0XFF,0X20,0X20,0X20,0X20,0X20};//connected
+//unsigned char clun[22] =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X6E,0X6F,0X74,0X20,0X43,0X6F,0X6E,0X6E,0X65,0X63,0X74,0X65,0X64,0XFF,0XFF,0X20};//not connected 
+unsigned char clu[22]  =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X20,0X20,0X20,0X20,0X43,0X4f,0X4e,0X4e,0X45,0X43,0X54,0X45,0X44,0XFF,0XFF,0X20};//connected
+unsigned char clun[22] =  {0X5A, 0XA5, 0X13, 0X82,0X55,0X00,0X4e,0X4f,0X54,0X20,0X43,0X4f,0X4e,0X4e,0X45,0X43,0X54,0X45,0X44,0XFF,0XFF,0X20};//not connected
 
 unsigned char cid1[7] = {0X5A, 0XA5, 0X04, 0X82, 0X68, 0X00, 0X31};
 unsigned char cid2[7] = {0X5A, 0XA5, 0X04, 0X82, 0X73, 0X00, 0X32};
@@ -148,25 +152,32 @@ unsigned char change_page[10] = {0X5A, 0XA5, 0X07, 0X82, 0X00, 0X84, 0X5A, 0X01,
 */
 int8_t DWIN_read()
 {
-if (dwin.available())
+//if (dwin.available())
+while (dwin.available())
+//if (dwin.available())
   {
     //
-    Buffer[Buffer_Len] = dwin.read();
+    unsigned char b = dwin.read();
+    if(b==0X5A)
+    {
+      Buffer_Len = 0;
+    }
+    Buffer[Buffer_Len] = b;
+    Serial.printf("%d\t",Buffer_Len);
     Serial.println(Buffer[Buffer_Len],HEX);
     Buffer_Len++;
     tcount = 5;
     if(Buffer_Len > 10)
     {
      Buffer_Len = 0; 
+     return -3; 
     }
-   return -3;
   }
-  else
-  {
+
     Buffer_Len = 0;
-    //if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[3]==0x06 &&Buffer[4]==0x83 &&Buffer[5]==0x59 &&Buffer[6]==0x00 && Buffer[7]==0x01 && Buffer[8]==0x00)
     //start 1
-    if(Buffer[0] == 0X01 &&  Buffer[1] == 0X00 &&  Buffer[2] == 0X01)
+    //if(Buffer[0] == 0X01 &&  Buffer[1] == 0X00 &&  Buffer[2] == 0X01)
+    if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[2]==0x06 &&Buffer[3]==0x83 &&Buffer[4]==0x8C &&Buffer[5]==0x00 && Buffer[6]==0x01 && Buffer[7]==0x00 && Buffer[8]==0x01)
     { 
       
       button = 1;
@@ -178,7 +189,7 @@ if (dwin.available())
      return button;
     }
     //start 2
-     else if(Buffer[0] == 0X01 &&  Buffer[1] == 0X00 &&  Buffer[2] == 0X00)
+     else if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[2]==0x06 &&Buffer[3]==0x83 &&Buffer[4]==0x8E &&Buffer[5]==0x00 && Buffer[6]==0x01 && Buffer[7]==0x00 && Buffer[8]==0x02)
     { 
       button = 2;
       for(int i=0;i<80;i++)
@@ -188,8 +199,8 @@ if (dwin.available())
      return button;
     }
     //start 3
-    else if(Buffer[0] == 0XFF &&  Buffer[1] == 0X01 &&  Buffer[2] == 0X00 && Buffer[3] == 0X01)
-    { 
+   else if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[2]==0x06 &&Buffer[3]==0x83 &&Buffer[4]==0x91 &&Buffer[5]==0x00 && Buffer[6]==0x01 && Buffer[7]==0x00 && Buffer[8]==0x03)
+   { 
       button = 3;
       for(int i=0;i<80;i++)
     {
@@ -198,7 +209,7 @@ if (dwin.available())
      return button;
     }
     //stop 1
-    else if(Buffer[0] == 0X00 &&  Buffer[1] == 0X01 &&  Buffer[2] == 0X00 &&  Buffer[3] == 0X01)
+    else if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[2]==0x06 &&Buffer[3]==0x83 &&Buffer[4]==0x86 &&Buffer[5]==0x00 && Buffer[6]==0x01 && Buffer[7]==0x00 && Buffer[8]==0x01)
     { 
       
       button = 1;
@@ -209,7 +220,7 @@ if (dwin.available())
      return button;
     }
     //stop 2
-     else if(Buffer[0] == 0X00 &&  Buffer[1] == 0X01 &&  Buffer[2] == 0X00  &&  Buffer[3] == 0X00)
+     else if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[2]==0x06 &&Buffer[3]==0x83 &&Buffer[4]==0x88 &&Buffer[5]==0x00 && Buffer[6]==0x01 && Buffer[7]==0x00 && Buffer[8]==0x02)
     { 
       button = 2;
       for(int i=0;i<80;i++)
@@ -219,7 +230,7 @@ if (dwin.available())
      return button;
     }
     //stop 3
-    else if(Buffer[0] == 0XFF &&  Buffer[1] == 0X00 &&  Buffer[2] == 0X01 && Buffer[3] == 0X00 && Buffer[4] == 0X01)
+    else if (Buffer[0] == 0X5A && Buffer[1] == 0XA5 && Buffer[2]==0x06 &&Buffer[3]==0x83 &&Buffer[4]==0x8A &&Buffer[5]==0x00 && Buffer[6]==0x01 && Buffer[7]==0x00 && Buffer[8]==0x03)
     { 
       button = 3;
       for(int i=0;i<80;i++)
@@ -232,10 +243,6 @@ if (dwin.available())
     {
     return -1;
     }
-
-    
-    
-  }
 
 
   
@@ -273,11 +280,36 @@ void flush_dwin()
 }
 
 /*
+* @brief : flush_readResp
+* This function flushes the available serial data.
+*/
+int8_t flush_readResp()
+{
+  while (dwin.available())
+  {
+   Buffer[Buffer_Len] = dwin.read();
+    Serial.println(Buffer[Buffer_Len],HEX);
+    Buffer_Len++;
+    tcount = 5;
+    if(Buffer_Len > 10)
+    {
+     Buffer_Len = 0; 
+    }
+  }
+    if(Buffer[0] == 0X5A &&  Buffer[1] == 0XA5 &&  Buffer[2] == 0X03  &&  Buffer[3] == 0X82  &&  Buffer[4] == 0X4F  &&  Buffer[5] == 0X4B)
+    { 
+      return 1;
+    }
+}
+
+
+/*
  * @brief: begin 
  * 
 */
 
 void dwin_setup()
 {
-	dwin.begin(115200);
+	//dwin.begin(115200);
+  dwin.begin(115200,SERIAL_8N1,27,26);
 }
