@@ -23,6 +23,8 @@ extern unsigned char cid2[7];
 
 uint8_t currentCounterThreshold_B = 30;
 
+bool disp_evse_B = false;
+
 OnBoot_B onBoot_B;
 OnReadUserId_B onReadUserId_B;
 OnSendHeartbeat_B onSendHeartbeat_B;
@@ -46,6 +48,8 @@ bool flag_evseSoftReset_B;
 
 extern bool flag_rebootRequired_C;
 extern bool flag_rebootRequired_A;
+
+extern bool flag_ed_A;
 
 //Reason for stop
 extern uint8_t reasonForStop;
@@ -102,6 +106,7 @@ void EVSE_B_StopSession(){
 	}
 	
 	//digitalWrite(32, LOW);
+	disp_evse_B = false;
     requestForRelay(STOP,2); 
     delay(500);           	
     flag_evseReadIdTag_B = false;
@@ -623,7 +628,8 @@ void EVSE_B_loop() {
 				//delay(250);
             
 				 if(DEBUG_OUT) Serial.println(F("[EVSE_B] Drawing Energy"));
-				displayMeterValuesB();
+				 disp_evse_B = true;
+				//displayMeterValuesB();
 				 //blinking green Led
 				 if(millis() - t_B > 5000){
 				 	// if((WiFi.status() == WL_CONNECTED) && (webSocketConncted == true) && (isInternetConnected == true)&& getChargePointStatusService()->getEmergencyRelayClose() == false){
@@ -656,7 +662,9 @@ void EVSE_B_loop() {
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);
-  						lcd.print("EV DISCONNECTED"); 
+  						lcd.print("No Power Drawn /"); 
+						lcd.setCursor(3, 1);
+						lcd.print("EV disconnected"); 
 						#endif
 				 		Serial.println(F("Stopping session due to No current"));
 				 		EVSE_B_StopSession();
@@ -724,6 +732,13 @@ void emergencyRelayClose_Loop_B(){
 			if(EMGCY_counter_B == 0){
 				requestForRelay(STOP,2);
 				requestLed(BLINKYRED,START,2);
+				#if LCD_ENABLED
+				lcd.clear();
+				//lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+    			//lcd.print("                    ");//Clear the line
+				lcd.setCursor(4, 0); // Or setting the cursor in the desired position.
+				lcd.print("FAULTED: EMGY");
+				#endif
 				getChargePointStatusService_B()->setEmergencyRelayClose(true);
 				EMGCY_FaultOccured_B = true;
 				EMGCY_counter_B = 0;
@@ -754,6 +769,7 @@ void emergencyRelayClose_Loop_B(){
 					getChargePointStatusService_B()->getUnderVoltage() == true ||
 					getChargePointStatusService_B()->getUnderTemperature() == true ||
 					getChargePointStatusService_B()->getOverTemperature() == true ||
+					(flag_ed_A) ||
 					getChargePointStatusService_B()->getOverCurrent() == true){
 						Serial.println("[EVSE_B] Fault Occurred.");
 						notFaulty_B = false;						
@@ -766,6 +782,7 @@ void emergencyRelayClose_Loop_B(){
 							getChargePointStatusService_B()->getUnderVoltage() == false &&
 							getChargePointStatusService_B()->getUnderTemperature() == false &&
 							getChargePointStatusService_B()->getOverTemperature() == false &&
+							(!flag_ed_A) &&
 							getChargePointStatusService_B()->getOverCurrent() == false){
 						Serial.println("[EVSE_B]Not Faulty.");	
 						notFaulty_B = true;					

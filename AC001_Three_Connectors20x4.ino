@@ -514,6 +514,11 @@ void loop() {
 
   meteringService->loop();
 
+  #if LCD_ENABLED
+  stateTimer();
+  disp_lcd_meter();
+  #endif
+
 
 
 #if CP_ACTIVE
@@ -631,7 +636,6 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
         Serial.println(F("Unable To attach/detach EVSE to the requested connector"));
          #if LCD_ENABLED
         lcd.clear();
-
         lcd.setCursor(0, 1);
         lcd.print("UNABLE TO");
         lcd.setCursor(0, 2);
@@ -642,7 +646,6 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
       Serial.println(F("Invalid Connector Id Received"));
        #if LCD_ENABLED
         lcd.clear();
-
         lcd.setCursor(0, 1);
         lcd.print("INVALID CONNECTOR");
         lcd.setCursor(0, 2);
@@ -910,3 +913,240 @@ void connectToWebsocket() {
   webSocket.setReconnectInterval(5000);
   //#endif
 }
+
+#if LCD_ENABLED
+unsigned long onTime = 0;
+uint8_t state_timer = 0;
+uint8_t disp_evse = 0;
+extern bool disp_evse_A;
+extern bool disp_evse_B;
+extern bool disp_evse_C;
+extern bool notFaulty_A;
+extern bool notFaulty_B;
+extern bool notFaulty_C;
+extern int8_t fault_code_A;
+extern int8_t fault_code_B;
+extern int8_t fault_code_C;
+void stateTimer()
+{
+  switch (state_timer)
+  {
+    case 0:
+      onTime = millis();
+      state_timer = 1;
+      disp_evse = 1;
+      break;
+    case 1:
+      if ((millis() - onTime) > 3000)
+      {
+        state_timer = 2;
+      }
+      break;
+    case 2:
+      onTime = millis();
+      state_timer = 3;
+      disp_evse = 2;
+      break;
+    case 3:
+      if ((millis() - onTime) > 3000)
+      {
+        state_timer = 4;
+      }
+      break;
+    case 4:
+     onTime = millis();
+     state_timer = 5;
+     disp_evse = 3;
+      break;
+    case 5:
+     if ((millis() - onTime) > 3000)
+      {
+        state_timer = 6;
+      }
+      break;
+    case 6:
+      state_timer = 0;
+  }
+}
+
+void disp_lcd_meter()
+{
+  float instantCurrrent_A = eic.GetLineCurrentA();
+			float instantVoltage_A  = eic.GetLineVoltageA();
+			float instantPower_A = 0.0f;
+
+			if(instantCurrrent_A < 0.15){
+				instantPower_A = 0;
+			}else{
+				instantPower_A = (instantCurrrent_A * instantVoltage_A)/1000.0;
+			}
+
+			float instantCurrrent_B = eic.GetLineCurrentB();
+			int instantVoltage_B  = eic.GetLineVoltageB();
+			float instantPower_B = 0.0f;
+
+			if(instantCurrrent_B < 0.15){
+				instantPower_B = 0;
+			}else{
+				instantPower_B = (instantCurrrent_B * instantVoltage_B)/1000.0;
+			}
+
+			float instantCurrrent_C = eic.GetLineCurrentC();
+			int instantVoltage_C = eic.GetLineVoltageC();
+			float instantPower_C = 0.0f;
+
+			if(instantCurrrent_C < 0.15){
+				instantPower_C = 0;
+			}else{
+				instantPower_C = (instantCurrrent_C * instantVoltage_C)/1000.0;
+			}
+  switch(disp_evse)
+  {
+    case 1: if(disp_evse_A)
+            {
+              lcd.clear();
+              lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+              if (notFaulty_A)
+              {
+              lcd.print("*****CHARGING 1*****"); // You can make spaces using well... spaces
+               lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+                lcd.print("VOLTAGE(v):");
+                lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
+                lcd.print(String(instantVoltage_A));
+                lcd.setCursor(0, 2);
+                lcd.print("CURRENT(A):");
+                lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
+                lcd.print(String(instantCurrrent_A)); 
+                lcd.setCursor(0, 3);
+                lcd.print("POWER(KW) :"); 
+                lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
+                lcd.print(String(instantPower_A));
+              }
+              else
+              {
+              
+              switch(fault_code_A)
+              {
+                case -1: break; //It means default. 
+                case 0: lcd.print("Connector1-Over Voltage");
+                    break;
+                case 1: lcd.print("Connector1-Under Voltage");
+                    break;
+                case 2: lcd.print("Connector1-Over Current");
+                    break;
+                case 3: lcd.print("Connector1-Under Current");
+                    break;
+                case 4: lcd.print("Connector1-Over Temp");
+                    break;
+                case 5: lcd.print("Connector1-Under Temp");
+                    break;
+                case 6: lcd.print("Connector1-GFCI"); // Not implemented in AC001
+                    break;
+                case 7: lcd.print("Connector1-Earth Disc");
+                    break;
+                default: lcd.print("*****FAULTED 1*****"); // You can make spaces using well... spacesbreak;
+              }  
+             }
+            }
+            break;
+    case 2: if(disp_evse_B)
+            {
+               lcd.clear();
+                lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+                if (notFaulty_B)
+                {
+                lcd.print("*****CHARGING 2*****"); // You can make spaces using well... spaces
+                lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+                lcd.print("VOLTAGE(v):");
+                lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
+                lcd.print(String(instantVoltage_B));
+                lcd.setCursor(0, 2);
+                lcd.print("CURRENT(A):");
+                lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
+                lcd.print(String(instantCurrrent_B)); 
+                lcd.setCursor(0, 3);
+                lcd.print("POWER(KW) :"); 
+                lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
+                lcd.print(String(instantPower_B));
+                }
+                else
+                {
+                switch(fault_code_B)
+                {
+                  case -1: break; //It means default. 
+                  case 0: lcd.print("Connector2-Over Voltage");
+                      break;
+                  case 1: lcd.print("Connector2-Under Voltage");
+                      break;
+                  case 2: lcd.print("Connector2-Over Current");
+                      break;
+                  case 3: lcd.print("Connector2-Under Current");
+                      break;
+                  case 4: lcd.print("Connector2-Over Temp");
+                      break;
+                  case 5: lcd.print("Connector2-Over Temp");
+                      break;
+                  case 6: lcd.print("Connector2-GFCI"); // Not implemented in AC001
+                      break;
+                  case 7: lcd.print("Connector2-Earth Disc");
+                      break;
+                  default: lcd.print("*****FAULTED 2*****"); // You can make spaces using well... spacesbreak;
+                }
+                }
+ 
+            }
+            break;
+    case 3: if(disp_evse_C)
+            {
+              lcd.clear();
+                lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+                if (notFaulty_C)
+                {
+                lcd.print("*****CHARGING 3*****"); // You can make spaces using well... spaces
+                lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+                lcd.print("VOLTAGE(v):");
+                lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
+                lcd.print(String(instantVoltage_C));
+                lcd.setCursor(0, 2);
+                lcd.print("CURRENT(A):");
+                lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
+                lcd.print(String(instantCurrrent_C)); 
+                lcd.setCursor(0, 3);
+                lcd.print("POWER(KW) :"); 
+                lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
+                lcd.print(String(instantPower_C));
+                }
+                else
+                {
+                  switch(fault_code_C)
+                {
+                  case -1: break; //It means default. 
+                  case 0: lcd.print("Connector3-Over Voltage");
+                      break;
+                  case 1: lcd.print("Connector3-Under Voltage");
+                      break;
+                  case 2: lcd.print("Connector3-Over Current");
+                      break;
+                  case 3: lcd.print("Connector3-Under Current");
+                      break;
+                  case 4: lcd.print("Connector3-Over Temp");
+                      break;
+                  case 5: lcd.print("Connector3-Over Temp");
+                      break;
+                  case 6: lcd.print("Connector3-GFCI"); // Not implemented in AC001
+                      break;
+                  case 7: lcd.print("Connector3-Earth Disc");
+                      break;
+                  default: lcd.print("*****FAULTED 3*****"); // You can make spaces using well... spacesbreak;
+                }
+                }
+ 
+
+  
+            }
+            break;
+    default: Serial.println(F("**Display default**"));
+            break;
+  }
+}
+#endif

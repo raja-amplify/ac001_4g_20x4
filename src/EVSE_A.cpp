@@ -42,6 +42,8 @@ OnUnauthorizeUser_A onUnauthorizeUser_A;
 
 uint8_t currentCounterThreshold_A = 30;
 
+bool disp_evse_A = false;
+
 ulong timerHb = 0;
 unsigned int heartbeatInterval = 50;
 
@@ -130,6 +132,7 @@ void EVSE_A_StopSession(){
 	}
 	
 	//digitalWrite(32, LOW);
+	disp_evse_A = false;
   requestForRelay(STOP,1); 
   delay(500);           	
   flag_evseReadIdTag_A = false;
@@ -671,7 +674,8 @@ void EVSE_A_loop() {
 			} 
 			if(getChargePointStatusService_A()->getEvDrawsEnergy() == true){
 				//delay(250);
-				displayMeterValues();
+				//displayMeterValues();
+				disp_evse_A = true;
 				 if(DEBUG_OUT) Serial.println(F("[EVSE_A] Drawing Energy"));
 
 				 //blinking green Led
@@ -704,10 +708,13 @@ void EVSE_A_loop() {
 				 		counter_drawingCurrent_A = 0;
 						 if(reasonForStop!= 3 || reasonForStop!= 4)
 						 reasonForStop = 1; // EV disconnected
+						 
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);
-  						lcd.print("EV DISCONNECTED"); 
+  						lcd.print("No Power Drawn /"); 
+						lcd.setCursor(3, 1);
+						lcd.print("EV disconnected"); 
 						#endif
 				 		Serial.println(F("Stopping session due to No current"));
 
@@ -777,6 +784,13 @@ void emergencyRelayClose_Loop_A(){
 			if(EMGCY_counter_A == 0){
 				requestForRelay(STOP,1);
 				requestLed(BLINKYRED,START,1);
+				#if LCD_ENABLED
+				lcd.clear();
+				//lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+    			//lcd.print("                    ");//Clear the line
+				lcd.setCursor(4, 0); // Or setting the cursor in the desired position.
+				lcd.print("FAULTED: EMGY");
+				#endif
 				getChargePointStatusService_A()->setEmergencyRelayClose(true);
 				EMGCY_FaultOccured_A = true;
 				EMGCY_counter_A = 0;
@@ -822,6 +836,7 @@ void emergencyRelayClose_Loop_A(){
 								getChargePointStatusService_A()->getUnderVoltage() == false &&
 								getChargePointStatusService_A()->getUnderTemperature() == false &&
 								getChargePointStatusService_A()->getOverTemperature() == false &&
+								getChargePointStatusService_A()->getEarthDisconnect() == false    && //New fault added.
 								getChargePointStatusService_A()->getOverCurrent() == false){
 							Serial.println(F("[EVSE_A] Not Faulty."));	
 							notFaulty_A = true;					
@@ -1089,7 +1104,7 @@ void displayMeterValues(){
 				break;
 		case 4: lcd.print("Connector1-Over Temp");
 				break;
-		case 5: lcd.print("Connector1-Over Temp");
+		case 5: lcd.print("Connector1-Under Temp");
 				break;
 		case 6: lcd.print("Connector1-GFCI"); // Not implemented in AC001
 				break;

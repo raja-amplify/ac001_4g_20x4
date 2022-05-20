@@ -36,6 +36,7 @@ extern bool webSocketConncted;
 extern bool wifi_connect;
 extern bool gsm_connect;
 extern bool isInternetConnected;
+extern bool flag_ed_A;
 
 uint8_t reasonForStop = 0;
 
@@ -89,31 +90,7 @@ ChargePointStatus ChargePointStatusService::inferenceStatus() {
 
 void ChargePointStatusService::loop() {
 	if (DEBUG_OUT) Serial.println(("[ChargePointStatusService] for Connector ID:"+String(connectorId)));
-	//No earth detection 
-
-	/*float instantVoltage_earth  = eic_earth.GetLineVoltageA();
-
-	if(instantVoltage_earth <170 && instantVoltage_earth >50)
-	{
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.println(F("***** no earth detected*****"));
-		Serial.printf("****** voltage earth value is: %f *************",instantVoltage_earth);
-	} 
-
-	else
-	{
-		Serial.printf("****** voltage earth value is: %f *************",instantVoltage_earth);
-	}*/
-
+	
 	ChargePointStatus inferencedStatus = inferenceStatus();
 
 	if (inferencedStatus != currentStatus) {
@@ -121,7 +98,7 @@ void ChargePointStatusService::loop() {
 		#if LCD_ENABLED
         lcd.clear();
  		lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-			lcd.print("****processing****");
+		lcd.print("****processing****");
 		#endif
 		#if DWIN_ENABLED
 		 
@@ -202,31 +179,40 @@ void ChargePointStatusService::loop() {
 			delay(10);
 		#endif
 	}
-
+			#if 0
 			#if LCD_ENABLED
         lcd.clear();
  		lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
 			lcd.print("STATUS: FAULTED");
-			if(getChargePointStatusService_A()->getOverVoltage() == true){
+			if(getChargePointStatusService_A()->getOverVoltage() == true)
+			{
+				if(!flag_ed_A)
+				{
 				lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: OVERVOLTAGE");
-	}else if(getChargePointStatusService_A()->getUnderVoltage() == true){
-		if(eic.GetLineVoltageA() < 170 && eic.GetLineVoltageA() > 50){
+				lcd.print("ERROR: OVERVOLTAGE");
+				}
+			}
+			else if(getChargePointStatusService_A()->getEarthDisconnect() == true){
+		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+	    lcd.print("ERROR: EARTH DISCONNECT");
+	}
+	else if(getChargePointStatusService_A()->getUnderVoltage() == true)
+	{
+		if(!flag_ed_A)
+		{
 			lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: NO EARTH");
-			
-		}else{
-			lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: U.V TRANSIENT");
+			lcd.print("ERROR: UNDERVOLTAGE");
 		}
+	}
 
-	}else if(getChargePointStatusService_A()->getUnderCurrent() == true){
+	else if(getChargePointStatusService_A()->getUnderCurrent() == true)
+	{
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		lcd.print("ERROR: UNDERCURRENT");
 
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true){
 		
-lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+			lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 			lcd.print("ERROR: OVERCURRENT");
 	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
@@ -236,23 +222,20 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		lcd.print("ERROR: UNDERTEMP");
 	}
-	else if(getChargePointStatusService_A()->getEarthDisconnect() == true){
-		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-	    lcd.print("ERROR: EARTH DISCONNECT");
-	}
 	else if(emergencyRelayClose){
 		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 		lcd.print("ERROR: EMERGENCY");
 	}
 	
 	#endif
+	#endif
 
 		} else {
 
 			//return ChargePointStatus::Available;
 			#if LCD_ENABLED
-        lcd.clear();
- 		lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+            lcd.clear();
+ 		    lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
 			lcd.print("STATUS: AVAILABLE");
 			lcd.setCursor(0, 1);
 			lcd.print("TAP RFID/SCAN QR");
@@ -339,6 +322,18 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true || getChargePointStatusService_B()->getOverCurrent() == true || getChargePointStatusService_C()->getOverCurrent() == true){
 	reasonForStop = Other;
+	// Added a new condition to check the toggling of relays in no earth state.
+			//G. Raja Sumant - 06/05/2022
+			if(getChargePointStatusService_A()->getOverCurrent() == true)
+			getChargePointStatusService_A()->stopEvDrawsEnergy();
+
+			if(getChargePointStatusService_B()->getOverCurrent() == true)
+			getChargePointStatusService_B()->stopEvDrawsEnergy();
+
+			if(getChargePointStatusService_C()->getOverCurrent() == true)
+			getChargePointStatusService_C()->stopEvDrawsEnergy();
+
+			
 	#if DWIN_ENABLED
 	fault_overCurr[4] = 0X51;
 	err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
@@ -370,15 +365,15 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 					#if LCD_ENABLED
 					lcd.clear();
  					lcd.setCursor(0, 0);
-					lcd.print("STATUS: SUSPENDEDEV");
+					lcd.print("STATUS:");
 					lcd.setCursor(0, 1);
-					lcd.print("KWH:");
-					lcd.setCursor(5, 1);
+					lcd.print("SUSPENDED EV");
+					/*lcd.setCursor(5, 1);
 					lcd.print("");
 					lcd.setCursor(0, 2);
 					lcd.print("TIME");
 					lcd.setCursor(5, 1);
-					lcd.print("");
+					lcd.print("");*/
 					#endif
 					//reasonForStop = Local;
 
@@ -394,7 +389,9 @@ lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
 					#if LCD_ENABLED
 					lcd.clear();
  					lcd.setCursor(0, 0);
-					lcd.print("STATUS: SUSPENDEDEVSE");
+					lcd.print("STATUS:");
+					lcd.setCursor(0, 1);
+					lcd.print("SUSPENDED EVSE");
 					#endif
 					#if DWIN_ENABLED
 					fault_suspEVSE[4] = 0X51;
