@@ -179,57 +179,7 @@ void ChargePointStatusService::loop() {
 			delay(10);
 		#endif
 	}
-			#if 0
-			#if LCD_ENABLED
-        lcd.clear();
- 		lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-			lcd.print("STATUS: FAULTED");
-			if(getChargePointStatusService_A()->getOverVoltage() == true)
-			{
-				if(!flag_ed_A)
-				{
-				lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-				lcd.print("ERROR: OVERVOLTAGE");
-				}
-			}
-			else if(getChargePointStatusService_A()->getEarthDisconnect() == true){
-		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-	    lcd.print("ERROR: EARTH DISCONNECT");
-	}
-	else if(getChargePointStatusService_A()->getUnderVoltage() == true)
-	{
-		if(!flag_ed_A)
-		{
-			lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: UNDERVOLTAGE");
-		}
-	}
-
-	else if(getChargePointStatusService_A()->getUnderCurrent() == true)
-	{
-		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-		lcd.print("ERROR: UNDERCURRENT");
-
-	}else if(getChargePointStatusService_A()->getOverCurrent() == true){
-		
-			lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-			lcd.print("ERROR: OVERCURRENT");
-	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
-		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-		lcd.print("ERROR: OVERTEMP");
-
-	}else if(getChargePointStatusService_A()->getOverTemperature() == true){
-		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-		lcd.print("ERROR: UNDERTEMP");
-	}
-	else if(emergencyRelayClose){
-		lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-		lcd.print("ERROR: EMERGENCY");
-	}
-	
-	#endif
-	#endif
-
+			
 		} else {
 
 			//return ChargePointStatus::Available;
@@ -368,12 +318,6 @@ void ChargePointStatusService::loop() {
 					lcd.print("STATUS:");
 					lcd.setCursor(0, 1);
 					lcd.print("SUSPENDED EV");
-					/*lcd.setCursor(5, 1);
-					lcd.print("");
-					lcd.setCursor(0, 2);
-					lcd.print("TIME");
-					lcd.setCursor(5, 1);
-					lcd.print("");*/
 					#endif
 					//reasonForStop = Local;
 
@@ -402,11 +346,6 @@ void ChargePointStatusService::loop() {
 				}
 				
 				//return ChargePointStatus::Charging;
-				/*lcd.clear();
- 				lcd.setCursor(0, 0);
-				lcd.print("STATUS: CHARGING");*/
-				
-			
 		}
 	} 
 

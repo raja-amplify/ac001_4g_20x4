@@ -728,8 +728,8 @@ void emergencyRelayClose_Loop_B(){
 		bool EMGCY_status_B = requestEmgyStatus();
 		//Serial.println("EMGCY_Status_B: "+String(EMGCY_status_B));
 		if(EMGCY_status_B == true){
-			//if(EMGCY_counter_B++ > 0){
-			if(EMGCY_counter_B == 0){
+			if(EMGCY_counter_B++ > 0){
+			//if(EMGCY_counter_B == 0){
 				requestForRelay(STOP,2);
 				requestLed(BLINKYRED,START,2);
 				#if LCD_ENABLED
@@ -807,7 +807,7 @@ void emergencyRelayClose_Loop_B(){
 					if ( (getChargePointStatusService_B()->getTransactionId() != -1)){ //can be buggy
 						if(fault_counter_B++ > 1){
 							fault_counter_B = 0;
-							requestForRelay(START,2);
+							//requestForRelay(START,2);
 							delay(50);
 							Serial.println("[EmergencyRelay_B] Starting Txn");
 							flag_faultOccured_B = false;

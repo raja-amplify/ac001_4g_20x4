@@ -630,12 +630,12 @@ void EVSE_C_loop() {
 						if(getChargePointStatusService_C()->getEmergencyRelayClose() == false){
 						 		requestLed(BLINKYGREEN,START,3);
 						 		t_C = millis();
-						 		if(millis() - relay_timer_C > 15000){
+						 		/*if(millis() - relay_timer_C > 15000){
 							 	
 									requestForRelay(START,3);
 									relay_timer_C = millis();
 
-								}
+								}*/
 						 }
 
 				 }
@@ -654,14 +654,13 @@ void EVSE_C_loop() {
 						lcd.print("EV disconnected"); 
 						#endif
 				 		Serial.println(F("Stopping session due to No current"));
-
 				 		counter_drawingCurrent_C = 0;
 				 		EVSE_C_StopSession();
 				 	}
 
 				 }else{
 				 	counter_drawingCurrent_C = 0;
-					currentCounterThreshold_C = 2;
+					currentCounterThreshold_C = 1; // 2 ideally.
 				 	Serial.println(F("counter_drawingCurrent Reset"));
 
 				 }
@@ -718,8 +717,8 @@ void emergencyRelayClose_Loop_C(){
 		bool EMGCY_status_C = requestEmgyStatus();
 		//Serial.println("EMGCY_Status_C: "+String(EMGCY_Status_C));
 		if(EMGCY_status_C == true){
-			//if(EMGCY_counter_C++ > 0){
-			if(EMGCY_counter_C == 0){
+			if(EMGCY_counter_C++ > 0){
+			//if(EMGCY_counter_C == 0){
 				requestForRelay(STOP,3);
 				requestLed(BLINKYRED,START,3);
 				#if LCD_ENABLED
@@ -738,6 +737,12 @@ void emergencyRelayClose_Loop_C(){
 			EMGCY_counter_C = 0;
 			getChargePointStatusService_C()->setEmergencyRelayClose(false);
 		}
+
+		/*if(getChargePointStatusService_C()->getTransactionId() == -1)
+		{
+			//getChargePointStatusService_C()->stopEvDrawsEnergy();
+			requestForRelay(STOP,3);
+		}*/
 
 		if(EMGCY_FaultOccured_C == true && getChargePointStatusService_C()->getTransactionId() != -1){
 
@@ -796,7 +801,7 @@ void emergencyRelayClose_Loop_C(){
 						if ( (getChargePointStatusService_C()->getTransactionId() != -1)){ //can be buggy
 							if(fault_counter_C++ > 1){
 								fault_counter_C = 0;
-								requestForRelay(START,3);
+								//requestForRelay(START,3);
 								delay(50);
 								Serial.println(F("[EmergencyRelay_C] Starting Txn"));
 								flag_faultOccured_C = false;

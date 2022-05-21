@@ -431,6 +431,7 @@ double ATM90E36::GetLineCurrentA() {
 	//if (curr > 35){
   if (curr > 16){
 		getChargePointStatusService_A()->setOverCurrent(true);
+    getChargePointStatusService_A()->setEmergencyRelayClose(true);
     Serial.println(F("[EVSE_A] Over Current"));
     fault_code_A = OverCurrent;
     #if LCD_ENABLED
@@ -476,6 +477,7 @@ double ATM90E36::GetLineCurrentB() {
   //if (curr > 35){
   if (curr > 16){
     getChargePointStatusService_B()->setOverCurrent(true);
+    getChargePointStatusService_B()->setEmergencyRelayClose(true);
     Serial.println(F("[EVSE_B] Over Current"));
     fault_code_B = OverCurrent;
     #if LCD_ENABLED
@@ -523,6 +525,7 @@ double ATM90E36::GetLineCurrentC() {
   //if (curr > 35){
   if (curr > 16){
     getChargePointStatusService_C()->setOverCurrent(true);
+    getChargePointStatusService_C()->setEmergencyRelayClose(true);
     Serial.println(F("[EVSE_A] Over Current"));
     fault_code_C = OverCurrent;
     #if LCD_ENABLED
