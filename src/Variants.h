@@ -29,7 +29,10 @@ In order to Enable Ethernet/WiFi,
 
 #define LED_ENABLED 		 1
 
-#define LCD_ENABLED		     1   
+#define LCD_ENABLED		     0  
+
+#define EARTH_DISCONNECT     0
+
 
 #define DWIN_ENABLED		 0   
 

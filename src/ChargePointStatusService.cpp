@@ -38,15 +38,6 @@ extern bool gsm_connect;
 extern bool isInternetConnected;
 extern bool flag_ed_A;
 
-uint8_t reasonForStop = 0;
-
-/*
-* @brief: Feature added by Raja
-* This feature will avoid hardcoding of messages. 
-*/
-typedef enum resonofstop { EmergencyStop, EVDisconnected , HardReset, Local , Other , PowerLoss, Reboot,Remote, Softreset,UnlockCommand,DeAuthorized};
-
-static const char *resonofstop_str[] = { "EmergencyStop", "EVDisconnected" , "HardReset", "Local" , "Other" , "PowerLoss", "Reboot","Remote", "SoftReset","UnlockCommand","DeAuthorized"};
 
 extern LCD_I2C lcd;
 
@@ -113,7 +104,7 @@ void ChargePointStatusService::loop() {
 			//Capture the reason for stop.
 			currentStatus = ChargePointStatus :: Faulted; 
 			if(getChargePointStatusService_A()->getOverVoltage() == true || getChargePointStatusService_B()->getOverVoltage() == true || getChargePointStatusService_C()->getOverVoltage() == true){
-				reasonForStop = Other;
+				//reasonForStop = Other;
 				#if DWIN_ENABLED
 				fault_overVolt[4] = 0X51;
 				err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
@@ -122,7 +113,7 @@ void ChargePointStatusService::loop() {
 				
 	}else if(getChargePointStatusService_A()->getUnderVoltage() == true || getChargePointStatusService_B()->getUnderVoltage() == true || getChargePointStatusService_B()->getUnderVoltage() == true){
 		if(eic.GetLineVoltageA() < 190 && eic.GetLineVoltageA() > 50){
-			reasonForStop = Other;
+			//reasonForStop = Other;
 			#if DWIN_ENABLED
 			fault_noearth[4] = 0X51;
 			err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
@@ -135,7 +126,7 @@ void ChargePointStatusService::loop() {
 			err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
 			delay(10);
 			#endif
-			reasonForStop = Other;
+			//reasonForStop = Other;
 			
 		}
 
@@ -145,17 +136,17 @@ void ChargePointStatusService::loop() {
 		err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
 		delay(10);
 		#endif
-		reasonForStop = EVDisconnected;
+		//reasonForStop = EVDisconnected;
 
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true || getChargePointStatusService_B()->getOverCurrent() == true || getChargePointStatusService_C()->getOverCurrent() == true){
-	reasonForStop = Other;
+	//reasonForStop = Other;
 	#if DWIN_ENABLED
 	fault_overCurr[4] = 0X51;
 	err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
 	delay(10);
 	#endif
 	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
-		reasonForStop = Other;
+		//reasonForStop = Other;
 		#if DWIN_ENABLED
 			fault_overTemp[4] = 0X51;
 			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
@@ -163,7 +154,7 @@ void ChargePointStatusService::loop() {
 		#endif
 
 	}else if(getChargePointStatusService_A()->getOverTemperature() == true){
-		reasonForStop = Other;
+		//reasonForStop = Other;
 
 		#if DWIN_ENABLED
 			fault_overTemp[4] = 0X51;
@@ -172,7 +163,7 @@ void ChargePointStatusService::loop() {
 		#endif
 	}
 	else if(emergencyRelayClose){
-		reasonForStop = EmergencyStop;
+		//reasonForStop = EmergencyStop;
 		#if DWIN_ENABLED
 			fault_emgy[4] = 0X51;
 			err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
@@ -215,7 +206,7 @@ void ChargePointStatusService::loop() {
 		
 	
 		//return ChargePointStatus::Preparing;
-		reasonForStop = Local;
+		//reasonForStop = Local;
 	} else {
 		
 		//lcd.setCursor(0, 0);
@@ -223,18 +214,18 @@ void ChargePointStatusService::loop() {
 		if (emergencyRelayClose){
 			//return ChargePointStatus::Faulted;
 			//lcd.print("STATUS: FAULTED");
-			reasonForStop = Local;
+			//reasonForStop = Local;
 
 			bool EMGCY_status = requestEmgyStatus();
 		
 
 			if(EMGCY_status)
 			{
-			reasonForStop = EmergencyStop;
+			//reasonForStop = EmergencyStop;
 			}
 
 			if(getChargePointStatusService_A()->getOverVoltage() == true || getChargePointStatusService_B()->getOverVoltage() == true || getChargePointStatusService_C()->getOverVoltage() == true){
-				reasonForStop = Other;
+				//reasonForStop = Other;
 				#if DWIN_ENABLED
 				fault_overVolt[4] = 0X51;
 				err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
@@ -243,7 +234,7 @@ void ChargePointStatusService::loop() {
 				
 	}else if(getChargePointStatusService_A()->getUnderVoltage() == true || getChargePointStatusService_B()->getUnderVoltage() == true || getChargePointStatusService_B()->getUnderVoltage() == true){
 		if(eic.GetLineVoltageA() < 170 && eic.GetLineVoltageA() > 50){
-			reasonForStop = Other;
+			//reasonForStop = Other;
 			getChargePointStatusService_A()->stopEvDrawsEnergy();
 			#if DWIN_ENABLED
 			fault_noearth[4] = 0X51;
@@ -257,7 +248,7 @@ void ChargePointStatusService::loop() {
 			err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
 			delay(10);
 			#endif
-			reasonForStop = Other;
+			//reasonForStop = Other;
 			
 		}
 
@@ -267,11 +258,11 @@ void ChargePointStatusService::loop() {
 		err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
 		delay(10);
 		#endif
-		if(reasonForStop!= 3 || reasonForStop!= 4)
-		reasonForStop = EVDisconnected;
+		//if(reasonForStop!= 3 || reasonForStop!= 4)
+		//reasonForStop = EVDisconnected;
 
 	}else if(getChargePointStatusService_A()->getOverCurrent() == true || getChargePointStatusService_B()->getOverCurrent() == true || getChargePointStatusService_C()->getOverCurrent() == true){
-	reasonForStop = Other;
+	//reasonForStop = Other;
 	// Added a new condition to check the toggling of relays in no earth state.
 			//G. Raja Sumant - 06/05/2022
 			if(getChargePointStatusService_A()->getOverCurrent() == true)
@@ -290,7 +281,7 @@ void ChargePointStatusService::loop() {
 	delay(10);
 	#endif
 	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
-		reasonForStop = Other;
+		//reasonForStop = Other;
 		#if DWIN_ENABLED
 			fault_overTemp[4] = 0X51;
 		    err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
@@ -298,7 +289,7 @@ void ChargePointStatusService::loop() {
 		#endif
 
 	}else if(getChargePointStatusService_A()->getOverTemperature() == true){
-		reasonForStop = Other;
+		//reasonForStop = Other;
 
 		#if DWIN_ENABLED
 		fault_overTemp[4] = 0X51;
@@ -319,7 +310,7 @@ void ChargePointStatusService::loop() {
 					lcd.setCursor(0, 1);
 					lcd.print("SUSPENDED EV");
 					#endif
-					//reasonForStop = Local;
+					////reasonForStop = Local;
 
 					#if DWIN_ENABLED
 					fault_suspEV[4] = 0X51;
@@ -342,7 +333,7 @@ void ChargePointStatusService::loop() {
 					err = DWIN_SET(fault_suspEVSE,sizeof(fault_suspEVSE)/sizeof(fault_suspEVSE[0]));
 					delay(10);
 					#endif
-					//reasonForStop = Local;
+					////reasonForStop = Local;
 				}
 				
 				//return ChargePointStatus::Charging;
@@ -350,7 +341,7 @@ void ChargePointStatusService::loop() {
 	} 
 
 		#if DISPLAY_ENABLED
-		displayStatus((int)currentStatus);
+		//displayStatus((int)currentStatus);
 		#endif
 		if (DEBUG_OUT) Serial.print(("[ChargePointStatusService] Status changed for Connector ID:"+String(connectorId)));
 

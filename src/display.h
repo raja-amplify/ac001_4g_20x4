@@ -1,4 +1,4 @@
-#if 0
+#if DISPLAY_ENABLED
 
 #ifndef DISPLAY_H
 #define DISPLAY_H

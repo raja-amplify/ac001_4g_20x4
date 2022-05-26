@@ -1,5 +1,4 @@
-
-#if 0
+#if DISPLAY_ENABLED
 #include"display.h"
 #include "ControlPilot.h"
 #include "Master.h"

@@ -21,6 +21,21 @@ extern unsigned char charging[28];
 extern LCD_I2C lcd;
 #endif
 
+
+
+
+/*
+* @brief: Feature added by Raja
+* This feature will avoid hardcoding of messages. 
+*/
+
+uint8_t reasonForStop = 3; //Local is the default value
+
+typedef enum resonofstop { EmergencyStop, EVDisconnected , HardReset, Local , Other , PowerLoss, Reboot,Remote, Softreset,UnlockCommand,DeAuthorized};
+
+static const char *resonofstop_str[] = { "EmergencyStop", "EVDisconnected" , "HardReset", "Local" , "Other" , "PowerLoss", "Reboot","Remote", "SoftReset","UnlockCommand","DeAuthorized"};
+
+
 /*
 * @brief: Feature added by Raja
 * This feature will avoid hardcoding of messages. 
@@ -148,12 +163,14 @@ double  ATM90E36::GetLineVoltageA() {
 
   //bool EMGCY_status = requestEmgyStatus();
 
+  #if EARTH_DISCONNECT
   if(digitalRead(23))
   {
     Serial.println(F("*****earth disconnect*****"));
     getChargePointStatusService_A()->setEarthDisconnect(true);
     fault_code_A = EarthDisconnect;
-    flag_ed_A = true; 
+    flag_ed_A = true;
+    reasonForStop = Other; 
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -181,13 +198,14 @@ double  ATM90E36::GetLineVoltageA() {
     //lcd.print("                    ");//Clear the line
     flag_ed_A = false;
   }
-
+  #endif
   if (volt<200){
     if(!flag_ed_A)
     {
 	  getChargePointStatusService_A()->setUnderVoltage(true);
 	  getChargePointStatusService_A()->setOverVoltage(false);
     fault_code_A = UnderVoltage;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -221,6 +239,7 @@ double  ATM90E36::GetLineVoltageA() {
 	  getChargePointStatusService_A()->setUnderVoltage(false);
 	  getChargePointStatusService_A()->setOverVoltage(true);
     fault_code_A = OverVoltage;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -268,6 +287,7 @@ double  ATM90E36::GetLineVoltageB() {
 	  getChargePointStatusService_B()->setUnderVoltage(true);
 	  getChargePointStatusService_B()->setOverVoltage(false);
     fault_code_B = UnderVoltage;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -300,6 +320,7 @@ double  ATM90E36::GetLineVoltageB() {
 	  getChargePointStatusService_B()->setUnderVoltage(false);
 	  getChargePointStatusService_B()->setOverVoltage(true);
     fault_code_B = OverVoltage;
+    reasonForStop = Other;
      #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -348,6 +369,7 @@ double  ATM90E36::GetLineVoltageC() {
 	  getChargePointStatusService_C()->setOverVoltage(false);
     if(DEBUG_OUT) Serial.println(F("[EVSE_C] Under Voltage"));
     fault_code_C = UnderVoltage;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -380,6 +402,7 @@ double  ATM90E36::GetLineVoltageC() {
 	  getChargePointStatusService_C()->setOverVoltage(true);
     if(DEBUG_OUT) Serial.println(F("[EVSE_C] Over Voltage"));
     fault_code_C = OverVoltage;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -434,6 +457,7 @@ double ATM90E36::GetLineCurrentA() {
     getChargePointStatusService_A()->setEmergencyRelayClose(true);
     Serial.println(F("[EVSE_A] Over Current"));
     fault_code_A = OverCurrent;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -480,6 +504,7 @@ double ATM90E36::GetLineCurrentB() {
     getChargePointStatusService_B()->setEmergencyRelayClose(true);
     Serial.println(F("[EVSE_B] Over Current"));
     fault_code_B = OverCurrent;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -528,6 +553,7 @@ double ATM90E36::GetLineCurrentC() {
     getChargePointStatusService_C()->setEmergencyRelayClose(true);
     Serial.println(F("[EVSE_A] Over Current"));
     fault_code_C = OverCurrent;
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -716,6 +742,7 @@ double ATM90E36::GetTemperature() {
 	  getChargePointStatusService_A()->setUnderTemperature(true);
 	  getChargePointStatusService_A()->setOverTemperature(false);
 	  if(DEBUG_OUT) Serial.println("Under Temperature"+String(temp));
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -737,6 +764,7 @@ double ATM90E36::GetTemperature() {
 	  getChargePointStatusService_A()->setUnderTemperature(false);
 	  getChargePointStatusService_A()->setOverTemperature(true);
 	  if(DEBUG_OUT) Serial.println("Over Temperature"+String(temp));
+    reasonForStop = Other;
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line

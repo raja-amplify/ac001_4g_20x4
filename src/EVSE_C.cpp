@@ -645,7 +645,10 @@ void EVSE_C_loop() {
 				 if(drawing_current_C <= 0.15){
 				 	counter_drawingCurrent_C++;
 				 	//if(counter_drawingCurrent_C > 120){
-					if(counter_drawingCurrent_C > currentCounterThreshold_C){
+					if(counter_drawingCurrent_C > currentCounterThreshold_C)
+					{
+						//Check for the case where reasonForStop is not Local , Other
+						if(reasonForStop!= 3 || reasonForStop!= 4)
 						reasonForStop = 1; // EV disconnected
 						 #if LCD_ENABLED
   						lcd.clear();
@@ -802,7 +805,7 @@ void emergencyRelayClose_Loop_C(){
 							if(fault_counter_C++ > 1){
 								fault_counter_C = 0;
 								//requestForRelay(START,3);
-								delay(50);
+								//delay(50);
 								Serial.println(F("[EmergencyRelay_C] Starting Txn"));
 								flag_faultOccured_C = false;
 							}

@@ -708,7 +708,6 @@ void EVSE_A_loop() {
 				 		counter_drawingCurrent_A = 0;
 						 if(reasonForStop!= 3 || reasonForStop!= 4)
 						 reasonForStop = 1; // EV disconnected
-						 
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);
@@ -862,7 +861,7 @@ void emergencyRelayClose_Loop_A(){
 							if(fault_counter_A++ > 1){
 								fault_counter_A = 0;
 								//requestForRelay(START,1);
-								delay(50);
+								//delay(50);
 								Serial.println(F("[EmergencyRelay_A] Starting Txn"));
 								flag_faultOccured_A = false;
 							}
