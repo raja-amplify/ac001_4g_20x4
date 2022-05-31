@@ -46,7 +46,9 @@ extern bool flag_evseUnauthorise_C;
 extern bool flag_evseSoftReset_C;
 extern bool flag_rebootRequired_C;
 
-extern uint8_t reasonForStop;
+extern uint8_t reasonForStop_A;
+extern uint8_t reasonForStop_B;
+extern uint8_t reasonForStop_C;
 
 Reset::Reset() {
 
@@ -66,12 +68,16 @@ void Reset::processReq(JsonObject payload) {
 		Serial.print(F("[Reset] Warning: received request to perform hard reset, but this implementation is only capable of soft reset!\n"));
 		//Hard_Reset(); To be implemented
 		softReset();
-		reasonForStop = 2;
+		reasonForStop_A = 2;
+		reasonForStop_B = 2;
+		reasonForStop_C = 2;
 
 	} else if (!strcmp(type, "Soft")){
 		if(DEBUG_OUT) Serial.println(F("Soft Reset is Requested"));
 		softReset();
-		reasonForStop = 8;
+		reasonForStop_A = 8;
+		reasonForStop_B = 8;
+		reasonForStop_C = 8;
 	}
 }
 

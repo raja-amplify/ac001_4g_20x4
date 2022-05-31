@@ -7,6 +7,10 @@
 #include "StopTransaction.h"
 #include "OcppEngine.h"
 #include "MeteringService.h"
+#if DISPLAY_ENABLED
+#include "display.h"
+extern bool flag_unfreeze;
+#endif
 #if LCD_ENABLED
 #include "LCD_I2C.h"
 extern LCD_I2C lcd;
@@ -22,6 +26,10 @@ extern unsigned char SEC[8];
 
 #endif
 
+extern bool disp_evse_A;
+extern bool disp_evse_B;
+extern bool disp_evse_C;
+
 extern int globalmeterstartA;
 extern unsigned long st_timeA;
 extern int globalmeterstartB;
@@ -34,7 +42,9 @@ extern unsigned long st_timeC;
 * This feature will avoid hardcoding of messages. 
 */
 //typedef enum resonofstop { EmergencyStop, EVDisconnected , HardReset, Local , Other , PowerLoss, Reboot,Remote, Softreset,UnlockCommand,DeAuthorized};
-extern uint8_t reasonForStop;
+extern uint8_t reasonForStop_A;
+extern uint8_t reasonForStop_B;
+extern uint8_t reasonForStop_C;
 static const char *resonofstop_str[] = { "EmergencyStop", "EVDisconnected" , "HardReset", "Local" , "Other" , "PowerLoss", "Reboot","Remote", "SoftReset","UnlockCommand","DeAuthorized"};
 
 extern uint8_t currentCounterThreshold_A;
@@ -80,6 +90,14 @@ DynamicJsonDocument* StopTransaction::createReq() {
       stop_time = millis();
       currentCounterThreshold_A = 60;
       //Add that stop lcd display over here
+      #if DISPLAY_ENABLED
+      unsigned long seconds = (stop_time - st_timeA) / 1000;
+      int hr = seconds/3600;                                                        //Number of seconds in an hour
+      int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
+      int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
+      String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
+      thanks_Disp_AC("1",String(float((meterStop-globalmeterstartA)/1000)),hrMinSec);
+      #endif
   #if LCD_ENABLED
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -136,6 +154,14 @@ DynamicJsonDocument* StopTransaction::createReq() {
       stop_time = millis();
       currentCounterThreshold_B = 60;
         //Add that stop lcd display over here
+        #if DISPLAY_ENABLED
+      unsigned long seconds = (stop_time - st_timeB) / 1000;
+      int hr = seconds/3600;                                                        //Number of seconds in an hour
+      int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
+      int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
+      String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
+      thanks_Disp_AC("2",String(float((meterStop-globalmeterstartB)/1000)),hrMinSec);
+      #endif
   #if LCD_ENABLED
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -189,6 +215,15 @@ uint8_t err = 0;
       stop_time = millis();
       //reset the counter.
       currentCounterThreshold_C = 60;
+
+      #if DISPLAY_ENABLED
+      unsigned long seconds = (stop_time - st_timeC) / 1000;
+      int hr = seconds/3600;                                                        //Number of seconds in an hour
+      int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
+      int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
+      String hrMinSec = (String(hr) + ":" + String(mins) + ":" + String(sec));  //Converts to HH:MM:SS string. This can be returned to the calling function.
+      thanks_Disp_AC("3",String(float((meterStop-globalmeterstartC)/1000)),hrMinSec);
+      #endif
         //Add that stop lcd display over here
   #if LCD_ENABLED
   lcd.clear();
@@ -254,8 +289,32 @@ uint8_t err = 0;
   // }
   payload["transactionId"] = transactionId;
 
-  Serial.printf("[StopTransaction] reason for stop : %d", reasonForStop);
-  payload["reason"] = resonofstop_str[reasonForStop];
+  flag_unfreeze = true;
+
+  switch(connectorId)
+  {
+    case 1: 
+  Serial.printf("[StopTransaction] reason for stop : %d", reasonForStop_A);
+  payload["reason"] = resonofstop_str[reasonForStop_A];
+  disp_evse_A = false;
+  //Clearing the reason.
+ reasonForStop_A = 3;
+  break;
+  case 2: 
+  Serial.printf("[StopTransaction] reason for stop : %d", reasonForStop_B);
+  payload["reason"] = resonofstop_str[reasonForStop_B];
+  disp_evse_B = false;
+  //Clearing the reason.
+ reasonForStop_B = 3;
+  break;
+  case 3: 
+  Serial.printf("[StopTransaction] reason for stop : %d", reasonForStop_C);
+  payload["reason"] = resonofstop_str[reasonForStop_C];
+  disp_evse_C = false;
+  //Clearing the reason.
+ reasonForStop_C = 3;
+  break;
+  }
 
   
 
@@ -286,8 +345,7 @@ void StopTransaction::processConf(JsonObject payload) {
 
   if (DEBUG_OUT) Serial.print(F("[StopTransaction] Request has been accepted!\n"));
 
-  //Clearing the reason.
- reasonForStop = 3;
+  
 
 }
 

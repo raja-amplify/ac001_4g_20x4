@@ -3,6 +3,11 @@
 #include "ControlPilot.h"
 #include "LCD_I2C.h"
 
+#if DISPLAY_ENABLED
+#include "display.h"
+extern bool flag_tapped; 
+#endif
+
 #if DWIN_ENABLED
 #include "dwin.h"
 extern SoftwareSerial dwin;
@@ -21,7 +26,7 @@ extern unsigned char charging[28];
 extern unsigned char cid2[7];
 #endif
 
-uint8_t currentCounterThreshold_B = 30;
+uint8_t currentCounterThreshold_B = 60;
 
 bool disp_evse_B = false;
 
@@ -52,7 +57,7 @@ extern bool flag_rebootRequired_A;
 extern bool flag_ed_A;
 
 //Reason for stop
-extern uint8_t reasonForStop;
+extern uint8_t reasonForStop_B;
 
 extern int8_t fault_code_B;
 
@@ -181,6 +186,15 @@ void EVSE_B_setup(){
   			if((idTagData_B != "") && (ongoingTxn_B == 1)){
   				currentIdTag_B = resumeTxn_B.getString("idTagData_B", "");
   				Serial.println(F("[EVSE_B_setOnReadUserId] Resuming Session"));
+				  #if LCD_ENABLED
+  				lcd.clear();
+  				lcd.setCursor(3, 2);
+  				lcd.print("SESSION B RESUME");
+				#endif
+				  #if DISPLAY_ENABLED
+      			  connAvail(2,"SESSION B RESUME");
+  				  checkForResponse_Disp();
+				  #endif
   				getChargePointStatusService_B()->authorize(currentIdTag_B); // so that Starttxn can easily fetch this data
   				requestLed(BLUE, START, 2);
   			}else{
@@ -201,6 +215,15 @@ void EVSE_B_setup(){
   				currentIdTag_B = resumeTxn_B.getString("idTagData_B", "");
   				getChargePointStatusService_B()->authorize(currentIdTag_B); // so that Starttxn can easily fetch this data
   				Serial.println(F("[EVSE_B_setOnReadUserId] Resuming Session"));
+				  #if DISPLAY_ENABLED
+      			  connAvail(2,"SESSION B RESUME");
+  				  checkForResponse_Disp();
+				  #endif
+				  #if LCD_ENABLED
+  				lcd.clear();
+  				lcd.setCursor(3, 2);
+  				lcd.print("SESSION B RESUME");
+				#endif
   				requestLed(BLUE, START, 2);
   			}else{
 				if(millis() - timerForRfid > 10000){ //timer for sending led request
@@ -295,7 +318,8 @@ void EVSE_B_setup(){
 				flag_evRequestsCharge_B = false;
 				flag_evseStopTransaction_B = false;
 				flag_evseUnauthorise_B = false;
-				requestLed(BLUE,START,2);
+				//requestLed(BLUE,START,2);
+				requestLed(BLINKYBLUE,START,2);
 				if (DEBUG_OUT) Serial.print(F("EVSE_B_setOnAuthentication Callback: Authorize request has been accepted! Calling StartTransaction Block.\n"));
 				#if CP_ACTIVE 
 				flag_controlPAuthorise = true;
@@ -337,6 +361,10 @@ void EVSE_B_setup(){
       flag_evseStopTransaction_B = false;
       flag_evseUnauthorise_B = false;
       if (DEBUG_OUT) Serial.print(F("EVSE_B_setOnStartTransaction Callback: StartTransaction was successful\n"));
+	   #if DISPLAY_ENABLED
+      	connAvail(2,"SESSION B STARTED");
+  		checkForResponse_Disp();
+	#endif
 	 #if LCD_ENABLED
       lcd.clear();
       lcd.setCursor(3, 2);
@@ -609,15 +637,16 @@ void EVSE_B_loop() {
 			if (getChargePointStatusService_B() != NULL && getChargePointStatusService_B()->getEvDrawsEnergy() == false) {
 				if (getChargePointStatusService_B()->getEmergencyRelayClose() == false) {
 					getChargePointStatusService_B()->startEvDrawsEnergy();
-					
+					reasonForStop_B = 3; // Local
 					if (DEBUG_OUT) Serial.print(F("[EVSE_B] Opening Relays.\n"));
 					requestForRelay(START,2);
-					requestLed(ORANGE,START,2);
+					 flag_tapped = true;
+					/*requestLed(ORANGE,START,2);
     				delay(1200);
     				requestLed(WHITE,START,2);
     				delay(1200);
     				requestLed(GREEN,START,2);
-   				 	delay(1000);
+   				 	delay(1000);*/
 					if(DEBUG_OUT) Serial.println(F("[EVSE_B] Started Drawing Energy"));
 					
 				} else if (getChargePointStatusService_B()->getEmergencyRelayClose() == true) {
@@ -660,8 +689,8 @@ void EVSE_B_loop() {
 					{
 				 		counter_drawingCurrent_B = 0;
 						 //Check for the case where reasonForStop is not Local , Other
-						if(reasonForStop!= 3 || reasonForStop!= 4)
-						 reasonForStop = 1; // EV disconnected
+						if(reasonForStop_B!= 3 || reasonForStop_B!= 4)
+						 reasonForStop_B = 1; // EV disconnected
 						 #if LCD_ENABLED
   						lcd.clear();
   						lcd.setCursor(3, 0);
@@ -734,7 +763,15 @@ void emergencyRelayClose_Loop_B(){
 			if(EMGCY_counter_B++ > 0){
 			//if(EMGCY_counter_B == 0){
 				requestForRelay(STOP,2);
+				disp_evse_B = false;
+				reasonForStop_B = 0;
 				requestLed(BLINKYRED,START,2);
+				 #if DISPLAY_ENABLED
+				 setHeader("RFID UNAVAILABLE");
+    			 checkForResponse_Disp();
+      			  connAvail(2,"FAULTED EMGY");
+  				  checkForResponse_Disp();
+				  #endif
 				#if LCD_ENABLED
 				lcd.clear();
 				//lcd.setCursor(0, 0); // Or setting the cursor in the desired position.

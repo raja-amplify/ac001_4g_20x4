@@ -8,6 +8,10 @@ extern Preferences preferences;
 TinyGsm modem(SerialAT);
 TinyGsmClient client(modem);
 
+#if DISPLAY_ENABLED
+#include "display.h"
+#endif
+
 void SetupGsm(){
 
     if(DEBUG_OUT) Serial.println(F("[CustomSIM7672] Starting 4G Setup"));
@@ -120,6 +124,9 @@ void printSerialData(){
 
 int counter_clientConnection = 0;
 
+#if DISPLAY_ENABLED
+unsigned long cloud_refresh_4g =0;
+#endif 
 void gsm_Loop(){
 
     if(!client.connected()){
@@ -135,9 +142,16 @@ void gsm_Loop(){
         SetupGsm();
         ConnectToServer();
     }else{
-        Serial.println(F("[Custom GSM] Client Connected"));
+        Serial.println(F("[Custom SIM7672S] Client Connected"));
+        #if DISPLAY_ENABLED
+        while(millis()-cloud_refresh_4g > 5000)
+        {
+            cloud_refresh_4g = millis();
+      cloudConnect_Disp(2);
+      checkForResponse_Disp();
+         }
+        #endif
     }
-
     gsmOnEvent();
 
 }

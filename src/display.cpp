@@ -1,4 +1,3 @@
-#if DISPLAY_ENABLED
 #include"display.h"
 #include "ControlPilot.h"
 #include "Master.h"
@@ -10,14 +9,16 @@ extern ATM90E36 eic;
 
 #define WAIT_TIMEOUT_DISP 2500
 
-SoftwareSerial display(27,26);
+//SoftwareSerial display(27,26);
+#define display Serial1
 extern EVSE_states_enum EVSE_state;
 
-StaticJsonDocument<100> data_tx;
-StaticJsonDocument<100> data_rx;
+StaticJsonDocument<300> data_tx;
+StaticJsonDocument<300> data_rx;
 
 void setupDisplay_Disp(){
-  display.begin(9600);
+  //display.begin(9600, SWSERIAL_8N1, 27,26, false,256);// Required to fix the deserialization error
+  display.begin(9600,SERIAL_8N1,27,26,false,256);
   Serial.println("Starting Display");
 }
 
@@ -36,6 +37,26 @@ void statusOfCharger_Disp(String state){
   data_rx.clear();
 
   data_tx["status"] = state;   //(char *)
+  serializeJson(data_tx,Serial);
+  serializeJson(data_tx,display);
+}
+
+/*
+* @brief: connAvail
+* This is a function to change connector 1,2,3 status on home page.
+*/
+void connAvail(uint8_t con, String state){
+  data_tx.clear();
+  data_rx.clear();
+  switch(con)
+  {
+  case 1: data_tx["connector1"] = state;   //(char *)
+          break;
+  case 2: data_tx["connector2"] = state;   //(char *)
+          break;
+  case 3: data_tx["connector3"] = state;   //(char *)
+          break;
+  }
   serializeJson(data_tx,Serial);
   serializeJson(data_tx,display);
 }
@@ -178,6 +199,21 @@ void displayEnergyValues_Disp(String voltage, String current, String energy){
 
 }
 
+void displayEnergyValues_Disp_AC(String con, String voltage, String current, String energy){
+  data_tx.clear();
+  data_rx.clear();
+
+  data_tx["display"] = "values";
+  data_tx["c"] = con;
+  data_tx["v"] = voltage;
+  data_tx["i"] = current;
+  data_tx["e"] = energy;
+
+  serializeJson(data_tx,Serial);
+  serializeJson(data_tx,display);
+
+}
+
 //void notify_Disp(String){}
 
 void thanks_Disp(String value){
@@ -192,6 +228,31 @@ void thanks_Disp(String value){
 
 }
 
+void thanks_Disp_AC(String con,String num_units,String time_elap){
+  data_tx.clear();
+  data_rx.clear();
+
+  data_tx["thank"] = "value";
+  data_tx["c"] = con;
+  data_tx["n"] = num_units;
+  data_tx["t"] = time_elap;
+
+  serializeJson(data_tx,Serial);
+  serializeJson(data_tx,display);
+
+
+}
+
+void setHeader(String stat)
+{
+  data_tx.clear();
+  data_rx.clear();
+
+  data_tx["rfidstatus"] = stat;
+  serializeJson(data_tx,Serial);
+  serializeJson(data_tx,display);
+}
+/*
 void cloudConnect_Disp(bool flag){
   data_tx.clear();
   data_rx.clear();
@@ -204,6 +265,25 @@ void cloudConnect_Disp(bool flag){
   serializeJson(data_tx,Serial);
   serializeJson(data_tx,display);
 }
+*/
+void cloudConnect_Disp(short int flag){
+  data_tx.clear();
+  data_rx.clear();
+
+  if(flag == 0){
+    data_tx["server"] = "0";
+  }else if(flag == 1){
+    data_tx["server"] = "1";
+  }else if(flag == 2){
+    data_tx["server"] = "2";
+  }else if(flag == 3){
+    data_tx["server"] = "3";
+  }
+  
+  serializeJson(data_tx,Serial);
+  serializeJson(data_tx,display);
+}
+
 
 bool checkForResponse_Disp(){
   bool status_disp = false;
@@ -382,5 +462,3 @@ bool checkForResponse(){
  	}
 	return false;
 }
-
-#endif

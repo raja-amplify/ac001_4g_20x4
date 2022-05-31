@@ -7,7 +7,8 @@
 #include "RemoteStartTransaction.h"
 #include "OcppEngine.h"
 
-
+extern bool flag_freeze;
+extern bool flag_unfreeze;
 
 RemoteStartTransaction::RemoteStartTransaction() {
 
@@ -23,12 +24,17 @@ void RemoteStartTransaction::processReq(JsonObject payload) {
 	Serial.println("Connector ID: "+ String(connectorId));
 	//Serial.println(String(getChargePointStatusService_A()->inferenceStatus());
 	if(connectorId == 1 && getChargePointStatusService_A()->inferenceStatus() == ChargePointStatus::Available){
+		flag_freeze = true;
 		getChargePointStatusService_A()->authorize(idTag,connectorId);
 	}else if(connectorId == 2 && getChargePointStatusService_B()->inferenceStatus() == ChargePointStatus::Available){
+		flag_freeze = true;
 		getChargePointStatusService_B()->authorize(idTag,connectorId);
 	}else if(connectorId ==3 && getChargePointStatusService_C()->inferenceStatus() == ChargePointStatus::Available){
+		flag_freeze = true;
 		getChargePointStatusService_C()->authorize(idTag,connectorId);
 	}else{
+		flag_freeze = false;
+		flag_unfreeze = true;
 		Serial.println(F("Unable to start txn Connector is busy"));
 	}
 	/*

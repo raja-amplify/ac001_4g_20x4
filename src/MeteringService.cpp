@@ -41,6 +41,100 @@ MeteringService::MeteringService(WebSocketsClient *webSocket)
 }
 
 void MeteringService::addDataPoint(time_t currentTime, float currentPower, float currentEnergy, float currentVoltage, float currentCurrent, float currentTemperature, int connector){
+//	Serial.println("connector: " + String(connector) + "TXID" + String(getChargePointStatusService_A()->getTransactionId()));
+	if(connector == 1 && getChargePointStatusService_A()->getTransactionId() == -1){
+		lastSampleTimeA = currentTime;
+
+	}else if(connector == 2 && getChargePointStatusService_B()->getTransactionId() == -1){
+		lastSampleTimeB = currentTime;
+
+	}else if(connector == 3 && getChargePointStatusService_C()->getTransactionId() == -1){
+		lastSampleTimeC = currentTime;
+
+	}else if(connector == 1 && getChargePointStatusService_A() != NULL && getChargePointStatusService_A()->getConnectorId() == 1 && getChargePointStatusService_A()->getEvDrawsEnergy() == true){
+		sampleTimeA.add(currentTime);
+		powerA.add(currentPower);
+		energyA.add(currentEnergy);
+		voltageA.add(currentVoltage);
+		currentA.add(currentCurrent);
+		temperature.add(currentTemperature);
+		//phaseA.add(currentPhase);
+
+		lastSampleTimeA = currentTime;
+
+		if (powerA.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& energyA.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& voltageA.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& currentA.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& temperature.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH) {
+
+				flushLinkedListValues(connector);
+		}
+
+	}else if(connector == 2 && getChargePointStatusService_B() != NULL && getChargePointStatusService_B()->getConnectorId() == 2 && getChargePointStatusService_B()->getEvDrawsEnergy() == true){
+
+		sampleTimeB.add(currentTime);
+		powerB.add(currentPower);
+		energyB.add(currentEnergy);
+		voltageB.add(currentVoltage);
+		currentB.add(currentCurrent);
+		temperature.add(currentTemperature);
+		//phaseB.add(currentPhase);
+
+		lastSampleTimeB = currentTime;
+		//lastPower = currentPower;
+
+		/*
+		* Check if to send all the meter values to the server
+		*/
+		if (powerB.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& energyB.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& voltageB.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& currentB.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& temperature.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH) {
+				
+				flushLinkedListValues(connector);
+		}
+
+
+
+	}else if(connector == 3 && getChargePointStatusService_C() != NULL && getChargePointStatusService_C()->getConnectorId() == 3 && getChargePointStatusService_C()->getEvDrawsEnergy() == true){
+
+		sampleTimeC.add(currentTime);
+		powerC.add(currentPower);
+		energyC.add(currentEnergy);
+		voltageC.add(currentVoltage);
+		currentC.add(currentCurrent);
+		temperature.add(currentTemperature);
+		//phaseC.add(currentPhase);
+
+		lastSampleTimeC = currentTime;
+		//lastPower = currentPower;
+		/*
+		* Check if to send all the meter values to the server
+		*/
+		if (powerC.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& energyC.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& voltageC.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& currentC.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH
+			&& temperature.size() >= METER_VALUES_SAMPLED_DATA_MAX_LENGTH) {
+				
+				flushLinkedListValues(connector);
+		}
+		
+	}else{
+
+		Serial.println("[Metering Serivce] Error Occurred Connector ID and chargepoint mismatch");
+		Serial.println("Requested Connector ID: "+String(connector));
+		Serial.println("chargepointA: "+ String(getChargePointStatusService_A()->getConnectorId()));
+		Serial.println("chargepointB: "+ String(getChargePointStatusService_B()->getConnectorId()));
+		Serial.println("chargepointC: "+ String(getChargePointStatusService_C()->getConnectorId()));
+
+	}
+}
+
+#if 0
+void MeteringService::addDataPoint(time_t currentTime, float currentPower, float currentEnergy, float currentVoltage, float currentCurrent, float currentTemperature, int connector){
 	
 
 	if(connector == 1 && getChargePointStatusService_A() != NULL && getChargePointStatusService_A()->getConnectorId() == 1){
@@ -126,7 +220,9 @@ void MeteringService::addDataPoint(time_t currentTime, float currentPower, float
 	}
 
 
-}/*
+}
+#endif
+/*
 
 	if (getChargePointStatusService_A() != NULL && getChargePointStatusService_A()->getTransactionId() == -1){  // for time being
 		sampleTimeA.add(currentTime);

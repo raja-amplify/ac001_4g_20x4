@@ -23,7 +23,7 @@ In order to Enable Ethernet/WiFi,
 
 #define CP_ACTIVE 			 0
 
-#define DISPLAY_ENABLED		 0
+#define DISPLAY_ENABLED		 1
 
 #define MASTERPIN_ENABLED    0
 
@@ -31,7 +31,7 @@ In order to Enable Ethernet/WiFi,
 
 #define LCD_ENABLED		     0  
 
-#define EARTH_DISCONNECT     0
+#define EARTH_DISCONNECT     1
 
 
 #define DWIN_ENABLED		 0   

@@ -24,11 +24,12 @@ DynamicJsonDocument* BootNotification::createReq() {
 	String cpSerial = String('\0');
 	EVSE_A_getChargePointSerialNumber(cpSerial);
 
-	DynamicJsonDocument *doc = new DynamicJsonDocument(JSON_OBJECT_SIZE(3) + strlen(EVSE_A_getChargePointVendor()) + 1 + cpSerial.length() + 1 + strlen(EVSE_A_getChargePointModel()) + 1);
+	DynamicJsonDocument *doc = new DynamicJsonDocument(JSON_OBJECT_SIZE(4) + strlen(EVSE_A_getChargePointVendor()) + 1 + cpSerial.length() + 1 + strlen(EVSE_A_getChargePointModel()) + 1);
 	JsonObject payload = doc->to<JsonObject>();
 	payload["chargePointVendor"] = EVSE_A_getChargePointVendor();
 	payload["chargePointSerialNumber"] = cpSerial;
 	payload["chargePointModel"] = EVSE_A_getChargePointModel();
+	payload["firmwareVersion"] = VERSION;
 	return doc;
 }
 

@@ -11,6 +11,19 @@
 #include "SimpleOcppOperationFactory.h"
 #include "LCD_I2C.h"
 
+#if DISPLAY_ENABLED
+#include "display.h"
+#endif
+extern bool disp_evse_A;
+extern bool disp_evse_B;
+extern bool disp_evse_C;
+extern bool notFaulty_A;
+extern bool notFaulty_B;
+extern bool notFaulty_C;
+extern bool EMGCY_FaultOccured_A;
+extern bool EMGCY_FaultOccured_B;
+extern bool EMGCY_FaultOccured_C;
+
 #if DWIN_ENABLED
 #include "dwin.h"
 extern unsigned char charging[28];
@@ -76,16 +89,88 @@ ChargePointStatus ChargePointStatusService::inferenceStatus() {
 		}
 	} 
 }
-
-
-
+#if DISPLAY_ENABLED
+unsigned long refreshInterval = 0;
+#endif
 void ChargePointStatusService::loop() {
 	if (DEBUG_OUT) Serial.println(("[ChargePointStatusService] for Connector ID:"+String(connectorId)));
-	
+	#if 0
+	#if DISPLAY_ENABLED
+		switch(connectorId)
+		{
+			case 1:
+		if(disp_evse_A) // set true on charging
+			{
+			 connAvail(1,"CHARGING");
+			}
+			else if(!notFaulty_A || EMGCY_FaultOccured_A)
+			{
+			 connAvail(1,"FAULTED");
+			}
+			else
+			{
+			 connAvail(1,"AVAILABLE");
+			}
+  			 checkForResponse_Disp();
+			   break;
+
+			case 2:
+		if(disp_evse_B) // set true on charging
+			{
+			 connAvail(2,"CHARGING");
+			}
+			else if(!notFaulty_B || EMGCY_FaultOccured_B)
+			{
+			 connAvail(2,"FAULTED");
+			}
+			else
+			{
+			 connAvail(2,"AVAILABLE");
+			}
+  			 checkForResponse_Disp();
+			   break;
+		
+		case 3:
+		if(disp_evse_C) // set true on charging
+			{
+			 connAvail(3,"CHARGING");
+			}
+			else if(!notFaulty_C|| EMGCY_FaultOccured_C) 
+			{
+			 connAvail(3,"FAULTED");
+			}
+			else
+			{
+			 connAvail(3,"AVAILABLE");
+			}
+  			 checkForResponse_Disp();
+			   break;
+		
+	}
+	#endif
+	#endif
 	ChargePointStatus inferencedStatus = inferenceStatus();
 
 	if (inferencedStatus != currentStatus) {
 		currentStatus = inferencedStatus;
+		/*#if DISPLAY_ENABLED
+		switch(connectorId)
+		{
+			case 1:
+		
+			 connAvail(1,"PROCESSING");
+  			 checkForResponse_Disp();
+			   break;
+			case 2:
+			 connAvail(2,"PROCESSING");
+  			 checkForResponse_Disp();
+			   break;
+		case 3:
+			 connAvail(3,"PROCESSING");
+  			 checkForResponse_Disp();
+			   break;
+		}
+	#endif*/
 		#if LCD_ENABLED
         lcd.clear();
  		lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
@@ -174,6 +259,63 @@ void ChargePointStatusService::loop() {
 		} else {
 
 			//return ChargePointStatus::Available;
+			#if 0
+			#if DISPLAY_ENABLED
+			if(disp_evse_A) // set true on charging
+			{
+			 connAvail(1,"CHARGING");
+			 checkForResponse_Disp();
+			}
+			else if(!notFaulty_A || EMGCY_FaultOccured_A)
+			{
+			 connAvail(1,"FAULTED");
+			 checkForResponse_Disp();
+			}
+			else
+			{
+			  connAvail(1,"AVAILABLE");
+			  checkForResponse_Disp();
+			  setHeader("TAP RFID");
+    		  checkForResponse_Disp();
+			}
+  			 
+			if(disp_evse_B) // set true on charging
+			{
+			 connAvail(2,"CHARGING");
+			 checkForResponse_Disp();
+			}
+			else if(!notFaulty_B)
+			{
+			 connAvail(2,"FAULTED");
+			 checkForResponse_Disp();
+			}
+			else
+			{
+			 connAvail(2,"AVAILABLE");
+			 checkForResponse_Disp();
+			 setHeader("TAP RFID");
+    		  checkForResponse_Disp();
+			}
+
+			if(disp_evse_C) // set true on charging
+			{
+			 connAvail(3,"CHARGING");
+			 checkForResponse_Disp();
+			}
+			else if(!notFaulty_C)
+			{
+			 connAvail(3,"FAULTED");
+			 checkForResponse_Disp();
+			}
+			else
+			{
+			 connAvail(3,"AVAILABLE");
+			 checkForResponse_Disp();
+			  setHeader("TAP RFID");
+    		  checkForResponse_Disp();
+			}
+  			#endif
+			#endif
 			#if LCD_ENABLED
             lcd.clear();
  		    lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
@@ -203,8 +345,17 @@ void ChargePointStatusService::loop() {
 		}
 
 	} else if (!transactionRunning) {
-		
-	
+		/*#if DISPLAY_ENABLED
+	switch(connectorId)
+	{
+		case 1: connAvail(1,"PREPARING");
+				break;
+		case 2: connAvail(2,"PREPARING");
+				break;
+		case 3: connAvail(3,"PREPARING");
+				break;
+	}
+	#endif*/
 		//return ChargePointStatus::Preparing;
 		//reasonForStop = Local;
 	} else {
@@ -303,6 +454,18 @@ void ChargePointStatusService::loop() {
 				
 				if (!evDrawsEnergy) {
 					//return ChargePointStatus::SuspendedEV;
+					#if DISPLAY_ENABLED
+					switch(connectorId)
+					{
+						case 1 : connAvail(1,"SuspendedEV");
+								 break;
+						case 2 : connAvail(2,"SuspendedEV");
+								 break;
+						case 3 : connAvail(3,"SuspendedEV");
+								 break;
+					}
+					checkForResponse_Disp();
+					#endif
 					#if LCD_ENABLED
 					lcd.clear();
  					lcd.setCursor(0, 0);
@@ -321,6 +484,18 @@ void ChargePointStatusService::loop() {
 				
 				if (!evseOffersEnergy) {
 					//return ChargePointStatus::SuspendedEVSE;
+					#if DISPLAY_ENABLED
+					switch(connectorId)
+					{
+						case 1 : connAvail(1,"SuspendedEVSE");
+								 break;
+						case 2 : connAvail(2,"SuspendedEVSE");
+								 break;
+						case 3 : connAvail(3,"SuspendedEVSE");
+								 break;
+					}
+					checkForResponse_Disp();
+					#endif
 					#if LCD_ENABLED
 					lcd.clear();
  					lcd.setCursor(0, 0);

@@ -28,7 +28,13 @@ extern bool flag_evRequestsCharge_C;
 extern bool flag_evseStopTransaction_C;
 extern bool flag_evseUnauthorise_C;
 
-extern uint8_t reasonForStop;
+extern uint8_t reasonForStop_A;
+extern uint8_t reasonForStop_B;
+extern uint8_t reasonForStop_C;
+
+extern bool disp_evse_A;
+extern bool disp_evse_B;
+extern bool disp_evse_C;
 
 RemoteStopTransaction::RemoteStopTransaction() {
 
@@ -42,8 +48,9 @@ const char* RemoteStopTransaction::getOcppOperationType(){
 // sample message: [2,"9f639cdf-8a81-406c-a77e-60dff3cb93eb","RemoteStopTransaction",{"transactionId":2042}]
 void RemoteStopTransaction::processReq(JsonObject payload) {
 	transactionId = payload["transactionId"];
-	reasonForStop = 7;
 	if(transactionId == getChargePointStatusService_A()-> getTransactionId()){
+		reasonForStop_A = 7;
+		disp_evse_A = false;
 		flag_evseReadIdTag_A = false;
 		flag_evseAuthenticate_A = false;
 		flag_evseStartTransaction_A = false;
@@ -51,6 +58,8 @@ void RemoteStopTransaction::processReq(JsonObject payload) {
 		flag_evseStopTransaction_A = true;
 		flag_evseUnauthorise_A = false;
 	}else if(transactionId == getChargePointStatusService_B()->getTransactionId()){
+		reasonForStop_B = 7;
+		disp_evse_B = false;
 		flag_evseReadIdTag_B = false;
 		flag_evseAuthenticate_B = false;
 		flag_evseStartTransaction_B = false;
@@ -58,6 +67,8 @@ void RemoteStopTransaction::processReq(JsonObject payload) {
 		flag_evseStopTransaction_B = true;
 		flag_evseUnauthorise_B = false;
 	}else if(transactionId == getChargePointStatusService_C()->getTransactionId()){
+		reasonForStop_C = 7;
+		disp_evse_C = false;
 		flag_evseReadIdTag_C = false;
 		flag_evseAuthenticate_C = false;
 		flag_evseStartTransaction_C = false;
