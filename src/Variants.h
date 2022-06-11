@@ -14,7 +14,7 @@ In order to Enable Ethernet/WiFi,
 
 //3.1 Concurrent fix
 
-#define VERSION             String("AC001_4_3")
+#define VERSION             String("AC001_4_4")
 #define GSM_ENABLED   		 0
 #define WIFI_ENABLED 		 1
 #define ETHERNET_ENABLED 	 0
@@ -23,7 +23,7 @@ In order to Enable Ethernet/WiFi,
 
 #define CP_ACTIVE 			 0
 
-#define DISPLAY_ENABLED		 1
+#define DISPLAY_ENABLED		 0
 
 #define MASTERPIN_ENABLED    0
 
@@ -34,7 +34,7 @@ In order to Enable Ethernet/WiFi,
 #define EARTH_DISCONNECT     1
 
 
-#define DWIN_ENABLED		 0   
+#define DWIN_ENABLED		 1   
 
 #define EVSECEREBRO 		 1
 #define STEVE                0

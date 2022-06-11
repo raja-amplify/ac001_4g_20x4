@@ -16,6 +16,14 @@ unsigned long st_timeB = 0;
 int globalmeterstartC = 0;
 unsigned long st_timeC = 0;
 
+
+/*
+* @brief: These flags are for display to show only one stop txn.
+*/
+bool flag_start_txn_A = false;
+bool flag_start_txn_B = false;
+bool flag_start_txn_C = false;
+
 StartTransaction::StartTransaction() {
 	/*if (getChargePointStatusService() != NULL) {
 		if (!getChargePointStatusService()->getIdTag().isEmpty()) {
@@ -50,14 +58,17 @@ DynamicJsonDocument* StartTransaction::createReq() {
 		if(connectorId == 1){
 			payload["meterStart"] = meteringService->currentEnergy_A();
 			globalmeterstartA = payload["meterStart"];
+			flag_start_txn_A = true;
 		st_timeA = millis();
 		}else if(connectorId ==2){
 			payload["meterStart"] = meteringService->currentEnergy_B();
 			globalmeterstartB = payload["meterStart"];
+			flag_start_txn_B = true;
 		st_timeB = millis();
 		}else if(connectorId == 3){
 			payload["meterStart"] = meteringService->currentEnergy_C();
 			globalmeterstartC = payload["meterStart"];
+			flag_start_txn_C = true;
 		st_timeC = millis();
 		}
 	}
@@ -86,7 +97,7 @@ void StartTransaction::processConf(JsonObject payload) {
 		// 	cpStatusService->startTransaction(transactionId);
 		// 	cpStatusService->startEnergyOffer();
 		// }
-
+		
 		SmartChargingService *scService = getSmartChargingService();
 		if (scService != NULL){
 			scService->beginChargingNow();

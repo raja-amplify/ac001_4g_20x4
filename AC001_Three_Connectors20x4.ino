@@ -47,7 +47,7 @@
 
 #if DISPLAY_ENABLED
 #include "src/display.h"
-bool flag_tapped = false; 
+bool flag_tapped = false;
 bool flag_freeze = false;
 bool flag_unfreeze = false;
 #endif
@@ -58,6 +58,8 @@ bool flag_unfreeze = false;
 extern TinyGsmClient client;
 
 #include"src/urlparse.h"
+
+#include "src/display_meterValues.h"
 
 //20x4 lcd display
 
@@ -88,6 +90,21 @@ extern unsigned char CONN_UNAVAIL[28];
 extern bool flag_faultOccured_A;
 extern bool flag_faultOccured_B;
 extern bool flag_faultOccured_C;
+extern unsigned char v1[8];
+extern unsigned char v2[8];
+extern unsigned char v3[8];
+extern unsigned char i1[8];
+extern unsigned char i2[8];
+extern unsigned char i3[8];
+extern unsigned char e1[8];
+extern unsigned char e2[8];
+extern unsigned char e3[8];
+extern unsigned char charging[28];
+extern unsigned char cid1[7];
+extern unsigned char cid2[7];
+extern unsigned char cid3[7];
+extern unsigned char unavail[30];
+
 #endif
 
 extern bool notFaulty_A;
@@ -169,15 +186,15 @@ void setup() {
   //  pinMode(16,OUTPUT);
   Serial.begin(115200);
   Master_setup();
-  pinMode(23,INPUT); // Earth detection.
+  pinMode(23, INPUT); // Earth detection.
   //https://arduino-esp8266.readthedocs.io/en/latest/Troubleshooting/debugging.html
   Serial.setDebugOutput(true);
 
-  #if DISPLAY_ENABLED
+#if DISPLAY_ENABLED
   setupDisplay_Disp();
   cloudConnect_Disp(false);
   checkForResponse_Disp();
-  #endif
+#endif
 
 #if LCD_ENABLED
   lcd.begin(true, 26, 27); // If you are using more I2C devices using the Wire library use lcd.begin(false)
@@ -211,8 +228,8 @@ void setup() {
   delay(10);
   err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0])); // cloud: not connected
   delay(10);
-  err = DWIN_SET(clear_tap_rfid, sizeof(clear_tap_rfid) / sizeof(clear_tap_rfid[0]));
-  delay(50);
+  //err = DWIN_SET(clear_tap_rfid, sizeof(clear_tap_rfid) / sizeof(clear_tap_rfid[0]));
+  //delay(50);
 #endif
 
   for (uint8_t t = 4; t > 0; t--) {
@@ -229,17 +246,17 @@ void setup() {
 
   requestforCP_OUT(STOP);
 
-  #if DISPLAY_ENABLED
+#if DISPLAY_ENABLED
   cloudConnect_Disp(false);
   checkForResponse_Disp();
   delay(10);
 
   //statusOfCharger_Disp("NOT AVAILABLE");
-  connAvail(1,"NOT AVAILABLE");
+  connAvail(1, "NOT AVAILABLE");
   checkForResponse_Disp();
-  connAvail(2,"NOT AVAILABLE");
+  connAvail(2, "NOT AVAILABLE");
   checkForResponse_Disp();
-  connAvail(3,"NOT AVAILABLE");
+  connAvail(3, "NOT AVAILABLE");
   checkForResponse_Disp();
   setHeader("RFID UNAVAILABLE");
   checkForResponse_Disp();
@@ -349,10 +366,10 @@ void setup() {
         internet = true;
         gsm_connect = false;
         Serial.println(F("Connected via WiFi"));
-        #if DISPLAY_ENABLED
+#if DISPLAY_ENABLED
         cloudConnect_Disp(3);
         checkForResponse_Disp();
-        #endif
+#endif
 #if LCD_ENABLED
         lcd.clear();
 
@@ -365,10 +382,10 @@ void setup() {
         delay(50);
         err = DWIN_SET(wi, sizeof(wi) / sizeof(wi[0]));
         delay(50);
-        err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        delay(50);
-        err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        delay(50);
+        //err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+        //delay(50);
+        //err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+        //delay(50);
 #endif
         delay(100);
         connectToWebsocket();
@@ -420,10 +437,10 @@ void setup() {
         internet = true;
         wifi_connect = false;
         Serial.println(F("connected via 4G"));
-        #if DISPLAY_ENABLED
+#if DISPLAY_ENABLED
         cloudConnect_Disp(2);
         checkForResponse_Disp();
-        #endif
+#endif
 #if LCD_ENABLED
         lcd.clear();
 
@@ -431,10 +448,10 @@ void setup() {
         lcd.print("CONNECTED VIA 4G");
 #endif
 #if DWIN_ENABLED
-        err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        delay(50);
-        err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        delay(50);
+        //err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+        //delay(50);
+        //err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+        //delay(50);
         err = DWIN_SET(g, sizeof(g) / sizeof(g[0]));
         delay(50);
         err = DWIN_SET(g, sizeof(g) / sizeof(g[0]));
@@ -504,21 +521,22 @@ void setup() {
   err = DWIN_SET(tap_rfid, sizeof(tap_rfid) / sizeof(tap_rfid[0]));
   delay(50);
 
-  err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-  delay(50);
+  //err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+  //delay(50);
 #endif
 
 #if DISPLAY_ENABLED
-      connAvail(1,"AVAILABLE");
+  connAvail(1, "AVAILABLE");
   checkForResponse_Disp();
-  connAvail(2,"AVAILABLE");
+  connAvail(2, "AVAILABLE");
   checkForResponse_Disp();
-  connAvail(3,"AVAILABLE");
+  connAvail(3, "AVAILABLE");
   checkForResponse_Disp();
   setHeader("TAP RFID");
-    checkForResponse_Disp();
-      delay(500);
+  checkForResponse_Disp();
+  delay(500);
 #endif
+
 
 }
 
@@ -572,17 +590,20 @@ void loop() {
 
   meteringService->loop();
 
-  #if LCD_ENABLED
+#if LCD_ENABLED
   stateTimer();
   disp_lcd_meter();
-  #endif
+#endif
 
-  #if DISPLAY_ENABLED
+#if DISPLAY_ENABLED
   stateTimer();
   disp_lcd_meter();
-  #endif
+#endif
 
-
+#if DWIN_ENABLED
+  stateTimer();
+  disp_dwin_meter();
+#endif
 
 
 #if CP_ACTIVE
@@ -598,6 +619,7 @@ void loop() {
 
 
 #if DWIN_ENABLED
+#if 1
 /***************************************EVSE_READINPUT BLOCK*********************************************************/
 String readIdTag = "";
 void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only if there is Internet
@@ -621,7 +643,22 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
     {
 
       readConnectorVal = dwin_input();
+      /*
+        @brief: If we want to use both the physical switches/display
+      */
+      //readConnectorVal = requestConnectorStatus();
       if (readConnectorVal > 0) {
+        //change_page[9] = 6; // change to page 3 and wait for input
+        //err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+        /*switch (readConnectorVal)
+        {
+          case 1: err = DWIN_SET(cid1, sizeof(cid1) / sizeof(cid1[0]));
+            break;
+          case 2: err = DWIN_SET(cid2, sizeof(cid2) / sizeof(cid2[0]));
+            break;
+          case 3: err = DWIN_SET(cid3, sizeof(cid3) / sizeof(cid3[0]));
+            break;
+        }*/
         bool result = assignEvseToConnector(readIdTag, readConnectorVal);
         if (result == true) {
           Serial.println(F("Attached/Detached EVSE to the requested connector"));
@@ -662,6 +699,91 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
     delay(10);*/
 
 }
+#endif
+
+#if 0
+/***************************************EVSE_READINPUT BLOCK*********************************************************/
+String readIdTag = "";
+void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only if there is Internet
+  readIdTag = "";
+  unsigned long tout = millis();
+  int8_t readConnectorVal = 0;
+  readIdTag = readRfidTag(true, mfrc522);
+  if (readIdTag.equals("") == false) {
+    //EVSE_StopTxnRfid(readIdTag);
+    //readConnectorVal = requestConnectorStatus();
+#if DWIN_ENABLED
+    change_page[9] = 2; // change to page 3 and wait for input
+    uint8_t err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);
+    flush_dwin();
+    
+      //readConnectorVal = dwin_input();
+      /*
+        @brief: If we want to use both the physical switches/display
+      */
+      readConnectorVal = requestConnectorStatus();
+      if (readConnectorVal > 0) {
+        change_page[9] = 6; // change to page 3 and wait for input
+        err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+        switch (readConnectorVal)
+        {
+          case 1: err = DWIN_SET(cid1, sizeof(cid1) / sizeof(cid1[0]));
+            break;
+          case 2: err = DWIN_SET(cid2, sizeof(cid2) / sizeof(cid2[0]));
+            break;
+          case 3: err = DWIN_SET(cid3, sizeof(cid3) / sizeof(cid3[0]));
+            break;
+        }
+        bool result = assignEvseToConnector(readIdTag, readConnectorVal);
+        if (result == true) {
+          Serial.println(F("Attached/Detached EVSE to the requested connector"));
+          //break;
+        } else {
+          Serial.println(F("Unable To attach/detach EVSE to the requested connector"));
+          //err = DWIN_SET(CONN_UNAVAIL, sizeof(CONN_UNAVAIL) / sizeof(CONN_UNAVAIL[0]));
+          //delay(10);
+           change_page[9] = 0; // change to page 3 and wait for input
+     err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+
+          //break;
+        }
+      } else {
+        Serial.println(F("Invalid Connector Id Received"));
+          change_page[9] = 0; // change to page 3 and wait for input
+     err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+        /*err = DWIN_SET(CONN_UNAVAIL, sizeof(CONN_UNAVAIL) / sizeof(CONN_UNAVAIL[0]));
+          delay(10);
+          change_page[9] = 0; // change to page 3 and wait for input
+          uint8_t err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+          delay(10);*/
+        //break;
+        //delay(2000);
+      }
+    
+#endif
+  }
+  //delay(100);
+  /*  uint8_t err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+    delay(10);
+    change_page[9] = 0; // change to page 0 and wait for input
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);
+
+    change_page[9] = 0; // change to page 0 and wait for input
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);
+
+    change_page[9] = 0; // change to page 0 and wait for input
+    err = DWIN_SET(change_page, sizeof(change_page) / sizeof(change_page[0]));
+    delay(10);*/
+
+}
+#endif
 
 #else
 
@@ -673,99 +795,99 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
   readIdTag = readRfidTag(true, mfrc522);
   if (readIdTag.equals("") == false) {
     //EVSE_StopTxnRfid(readIdTag);
-    #if LCD_ENABLED
-        lcd.clear();
+#if LCD_ENABLED
+    lcd.clear();
 
-        lcd.setCursor(0, 1);
-        lcd.print("SCAN DONE.");
-        lcd.setCursor(0, 2);
-        lcd.print("SELECT CONNECTOR");
-    #endif
-    #if DISPLAY_ENABLED
-     connAvail(1,"PUSH TO START/STOP");
-  checkForResponse_Disp();
-  connAvail(2,"PUSH TO START/STOP");
-  checkForResponse_Disp();
-  connAvail(3,"PUSH TO START/STOP");
-  checkForResponse_Disp();
-    #endif
+    lcd.setCursor(0, 1);
+    lcd.print("SCAN DONE.");
+    lcd.setCursor(0, 2);
+    lcd.print("SELECT CONNECTOR");
+#endif
+#if DISPLAY_ENABLED
+    connAvail(1, "PUSH TO START/STOP");
+    checkForResponse_Disp();
+    connAvail(2, "PUSH TO START/STOP");
+    checkForResponse_Disp();
+    connAvail(3, "PUSH TO START/STOP");
+    checkForResponse_Disp();
+#endif
     readConnectorVal = requestConnectorStatus();
     if (readConnectorVal > 0) {
       bool result = assignEvseToConnector(readIdTag, readConnectorVal);
       if (result == true) {
         Serial.println(F("Attached/Detached EVSE to the requested connector"));
-        #if LCD_ENABLED
+#if LCD_ENABLED
         lcd.clear();
 
         lcd.setCursor(0, 1);
         lcd.print("ATTACHED");
         lcd.setCursor(0, 2);
         lcd.print("PLEASE WAIT");
-    #endif
-     #if DISPLAY_ENABLED
-     flag_freeze = true;
-     switch(readConnectorVal)
-     {
-          case 1:connAvail(1,"SELECTED PLEASE WAIT");
-          break;
-          case 2:connAvail(2,"SELECTED PLEASE WAIT");
-          break;
-          case 3:connAvail(3,"SELECTED PLEASE WAIT");
-          break;
-     }
-     checkForResponse_Disp();
-    #endif
+#endif
+#if DISPLAY_ENABLED
+        flag_freeze = true;
+        switch (readConnectorVal)
+        {
+          case 1: connAvail(1, "SELECTED PLEASE WAIT");
+            break;
+          case 2: connAvail(2, "SELECTED PLEASE WAIT");
+            break;
+          case 3: connAvail(3, "SELECTED PLEASE WAIT");
+            break;
+        }
+        checkForResponse_Disp();
+#endif
       } else {
         Serial.println(F("Unable To attach/detach EVSE to the requested connector"));
-        #if DISPLAY_ENABLED
-     switch(readConnectorVal)
-     {
-          case 1: connAvail(1,"UNABLE TO SELECT");
-          break;
-          case 2:connAvail(2,"UNABLE TO SELECT");
-          break;
-          case 3:connAvail(3,"UNABLE TO SELECT");
-          break;
-     }
-     checkForResponse_Disp();
-    #endif
-         #if LCD_ENABLED
+#if DISPLAY_ENABLED
+        switch (readConnectorVal)
+        {
+          case 1: connAvail(1, "UNABLE TO SELECT");
+            break;
+          case 2: connAvail(2, "UNABLE TO SELECT");
+            break;
+          case 3: connAvail(3, "UNABLE TO SELECT");
+            break;
+        }
+        checkForResponse_Disp();
+#endif
+#if LCD_ENABLED
         lcd.clear();
         lcd.setCursor(0, 1);
         lcd.print("UNABLE TO");
         lcd.setCursor(0, 2);
         lcd.print("ATTACH!");
-    #endif
+#endif
       }
     } else {
       Serial.println(F("Invalid Connector Id Received"));
-      #if DISPLAY_ENABLED
+#if DISPLAY_ENABLED
       flag_freeze = false;
       flag_unfreeze = true;
       /*connAvail(1,"AVAILABLE");
-      checkForResponse_Disp();
-      connAvail(2,"AVAILABLE");
-      checkForResponse_Disp();
-      connAvail(3,"AVAILABLE");
-      checkForResponse_Disp();*/
-     /*switch(readConnectorVal)
-     {
-          case 1: connAvail(1,"INVALID CONNECTOR ID");
-          break;
-          case 2:connAvail(2,"INVALID CONNECTOR ID");
-          break;
-          case 3:connAvail(3,"INVALID CONNECTOR ID");
-          break;
-     }*/
-     //checkForResponse_Disp();
-    #endif
-       #if LCD_ENABLED
-        lcd.clear();
-        lcd.setCursor(0, 1);
-        lcd.print("INVALID CONNECTOR");
-        lcd.setCursor(0, 2);
-        lcd.print("RECEIVED");
-    #endif
+        checkForResponse_Disp();
+        connAvail(2,"AVAILABLE");
+        checkForResponse_Disp();
+        connAvail(3,"AVAILABLE");
+        checkForResponse_Disp();*/
+      /*switch(readConnectorVal)
+        {
+           case 1: connAvail(1,"INVALID CONNECTOR ID");
+           break;
+           case 2:connAvail(2,"INVALID CONNECTOR ID");
+           break;
+           case 3:connAvail(3,"INVALID CONNECTOR ID");
+           break;
+        }*/
+      //checkForResponse_Disp();
+#endif
+#if LCD_ENABLED
+      lcd.clear();
+      lcd.setCursor(0, 1);
+      lcd.print("INVALID CONNECTOR");
+      lcd.setCursor(0, 2);
+      lcd.print("RECEIVED");
+#endif
       delay(2000);
     }
 
@@ -776,35 +898,69 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
 #endif
 
 #if DWIN_ENABLED
+extern bool disp_evse_A;
+extern bool disp_evse_B;
+extern bool disp_evse_C;
 void display_avail()
 {
-  if (notFaulty_A)
+  Serial.println(F("[DWIN MAIN] Trying to update status"));
+  if (isInternetConnected)
   {
-    if (notFaulty_B)
+    uint8_t err = 0;
+    if (notFaulty_A && !EMGCY_FaultOccured_A && !disp_evse_A)
     {
-      if (notFaulty_C)
+      avail[4] = 0X51;
+      avail[5] = 0X50;
+      err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+      delay(10);
+
+      if (notFaulty_B && !EMGCY_FaultOccured_B && !disp_evse_B)
       {
-        avail[4] = 0X51; 
-        uint8_t err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
-        delay(10);
         avail[4] = 0X51;
+        avail[5] = 0X50;
         err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
         delay(10);
+        if (notFaulty_C && !EMGCY_FaultOccured_C && !disp_evse_C)
+        {
+          /*avail[4] = 0X51;
+            err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+            delay(10);
+            avail[4] = 0X51;
+            err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+            delay(10);*/
+          avail[4] = 0X51;
+          avail[5] = 0X00;
+          err = DWIN_SET(avail, sizeof(avail) / sizeof(avail[0]));
+          delay(10);
+          err = DWIN_SET(tap_rfid, sizeof(tap_rfid) / sizeof(tap_rfid[0]));
+          delay(10);
+        }
+        else
+        {
+          Serial.println(F("****Display c faulty****"));
+         // err = DWIN_SET(unavail, sizeof(unavail) / sizeof(unavail[0]));
+          //delay(10);
+        }
       }
       else
       {
-        Serial.println(F("****Display c faulty****"));
+        Serial.println(F("****Display B faulty****"));
+        //err = DWIN_SET(unavail, sizeof(unavail) / sizeof(unavail[0]));
+        //delay(10);
       }
     }
     else
     {
-      Serial.println(F("****Display B faulty****"));
+      Serial.println(F("****Display A faulty****"));
+      //err = DWIN_SET(unavail, sizeof(unavail) / sizeof(unavail[0]));
+      //delay(10);
     }
   }
   else
-  {
-    Serial.println(F("****Display A faulty****"));
-  }
+
+{
+ Serial.println(F("Internet not available : Hence not updating status."));
+}
 }
 #endif
 
@@ -831,9 +987,9 @@ bool assignEvseToConnector(String readIdTag, int readConnectorVal) {
     } else if (getChargePointStatusService_B()->inferenceStatus() == ChargePointStatus::Available) {
       getChargePointStatusService_B()->authorize(readIdTag, readConnectorVal);    //authorizing twice needed to be improvise
       status = true;
-    } 
+    }
   }
-   else if (readConnectorVal == 3) {
+  else if (readConnectorVal == 3) {
     if (getChargePointStatusService_C()->getIdTag() == readIdTag && getChargePointStatusService_C()->getTransactionId() != -1) {
       Serial.println(F("[EVSE_C] Stopping Transaction with RFID TAP"));
       EVSE_C_StopSession();
@@ -908,7 +1064,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   }
 }
 //#endif
-
+#if 1
 /*
   @brief : Read the touch display
 */
@@ -922,6 +1078,7 @@ int8_t dwin_input()
   return button;
 
 }
+#endif
 #endif
 //#if WIFI_ENABLED
 int wifi_counter = 0;
@@ -944,23 +1101,23 @@ void wifi_Loop() {
   }
   else
   {
-    
-    #if DISPLAY_ENABLED
-    while(millis()-cloud_refresh > 5000)
+
+#if DISPLAY_ENABLED
+    while (millis() - cloud_refresh > 5000)
     {
       //cloud offline
       cloud_refresh = millis();
       cloudConnect_Disp(3);
       checkForResponse_Disp();
     }
-    #endif
+#endif
   }
 }
 //#endif
 short int counterPing = 0;
 void cloudConnectivityLed_Loop() {
 #if DWIN_ENABLED
-uint8_t err = 0 ;
+  uint8_t err = 0 ;
 #endif
   if (wifi_connect == true) {
     if (counterPing++ >= 3) { // sending ping after every 30 sec [if internet is not there sending ping packet itself consumes 10sec]
@@ -970,75 +1127,75 @@ uint8_t err = 0 ;
     }
     if ((WiFi.status() != WL_CONNECTED || webSocketConncted == false || isInternetConnected == false ) && getChargePointStatusService_A()->getEmergencyRelayClose() == false) { //priority is on fault
       if (millis() - timercloudconnect > 10000) { //updates in 5sec
-      #if DISPLAY_ENABLED
-      //cloud offline
-      cloudConnect_Disp(false);
-      checkForResponse_Disp();
-      connAvail(1,"UNAVAILABLE");
-      checkForResponse_Disp();
-      connAvail(2,"UNAVAILABLE");
-      checkForResponse_Disp();
-      connAvail(3,"UNAVAILABLE");
-      checkForResponse_Disp();
-      setHeader("RFID UNAVAILABLE");
-      checkForResponse_Disp();
-      #endif
-      #if LCD_ENABLED
-      lcd.clear();
- 	  	lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-			lcd.print("STATUS: UNAVAILABLE");
-			//lcd.setCursor(0, 1);
-			//lcd.print("TAP RFID/SCAN QR");
-			lcd.setCursor(0, 2);
-			lcd.print("CONNECTION");
-			lcd.setCursor(0, 3);
-			lcd.print("CLOUD: offline");
-      #endif
+#if DISPLAY_ENABLED
+        //cloud offline
+        cloudConnect_Disp(false);
+        checkForResponse_Disp();
+        connAvail(1, "UNAVAILABLE");
+        checkForResponse_Disp();
+        connAvail(2, "UNAVAILABLE");
+        checkForResponse_Disp();
+        connAvail(3, "UNAVAILABLE");
+        checkForResponse_Disp();
+        setHeader("RFID UNAVAILABLE");
+        checkForResponse_Disp();
+#endif
+#if LCD_ENABLED
+        lcd.clear();
+        lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+        lcd.print("STATUS: UNAVAILABLE");
+        //lcd.setCursor(0, 1);
+        //lcd.print("TAP RFID/SCAN QR");
+        lcd.setCursor(0, 2);
+        lcd.print("CONNECTION");
+        lcd.setCursor(0, 3);
+        lcd.print("CLOUD: offline");
+#endif
 #if LED_ENABLED
         requestLed(BLINKYWHITE_ALL, START, 1);
 #endif
 #if DWIN_ENABLED
- err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
+        err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0]));
 #endif
         timercloudconnect = millis();
       }
     }
-    #if DWIN_ENABLED
-  err = DWIN_SET(wi,sizeof(wi)/sizeof(wi[0]));
-  #endif
+#if DWIN_ENABLED
+    err = DWIN_SET(wi, sizeof(wi) / sizeof(wi[0]));
+#endif
   } else if (gsm_connect == true && client.connected() ==  false && getChargePointStatusService_A()->getEmergencyRelayClose() == false) {
     if (millis() - timercloudconnect > 10000) { //updates in 5sec
-    #if DISPLAY_ENABLED
+#if DISPLAY_ENABLED
       //cloud offline
       cloudConnect_Disp(false);
       checkForResponse_Disp();
-      #endif
-     #if LCD_ENABLED
+#endif
+#if LCD_ENABLED
       lcd.clear();
- 	  	lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-			lcd.print("STATUS: UNAVAILABLE");
-			//lcd.setCursor(0, 1);
-			//lcd.print("TAP RFID/SCAN QR");
-			lcd.setCursor(0, 2);
-			lcd.print("CONNECTION");
-			lcd.setCursor(0, 3);
-			lcd.print("CLOUD: offline");
-      #endif
+      lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+      lcd.print("STATUS: UNAVAILABLE");
+      //lcd.setCursor(0, 1);
+      //lcd.print("TAP RFID/SCAN QR");
+      lcd.setCursor(0, 2);
+      lcd.print("CONNECTION");
+      lcd.setCursor(0, 3);
+      lcd.print("CLOUD: offline");
+#endif
 #if LED_ENABLED
       requestLed(BLINKYWHITE_ALL, START, 1);
 #endif
 #if DWIN_ENABLED
- err = DWIN_SET(clun,sizeof(clun)/sizeof(clun[0]));
+      err = DWIN_SET(clun, sizeof(clun) / sizeof(clun[0]));
 #endif
       timercloudconnect = millis();
 
     }
   }
-  if(gsm_connect == true && client.connected() ==  true)
+  if (gsm_connect == true && client.connected() ==  true)
   {
-     #if DWIN_ENABLED
-  err = DWIN_SET(g,sizeof(g)/sizeof(g[0]));
-  #endif
+#if DWIN_ENABLED
+    err = DWIN_SET(g, sizeof(g) / sizeof(g[0]));
+#endif
   }
 
 }
@@ -1063,540 +1220,3 @@ void connectToWebsocket() {
   webSocket.setReconnectInterval(5000);
   //#endif
 }
-
-#if DISPLAY_ENABLED
-unsigned long onTime = 0;
-uint8_t state_timer = 0;
-uint8_t disp_evse = 0;
-extern bool disp_evse_A;
-extern bool disp_evse_B;
-extern bool disp_evse_C;
-extern bool notFaulty_A;
-extern bool notFaulty_B;
-extern bool notFaulty_C;
-extern int8_t fault_code_A;
-extern int8_t fault_code_B;
-extern int8_t fault_code_C;
-void stateTimer()
-{
-  switch (state_timer)
-  {
-    case 0:
-      onTime = millis();
-      state_timer = 1;
-      disp_evse = 1;
-      break;
-    case 1:
-      if ((millis() - onTime) > 3000)
-      {
-        state_timer = 2;
-      }
-      break;
-    case 2:
-      onTime = millis();
-      state_timer = 3;
-      disp_evse = 2;
-      break;
-    case 3:
-      if ((millis() - onTime) > 3000)
-      {
-        state_timer = 4;
-      }
-      break;
-    case 4:
-     onTime = millis();
-     state_timer = 5;
-     disp_evse = 3;
-      break;
-    case 5:
-     if ((millis() - onTime) > 3000)
-      {
-        state_timer = 6;
-      }
-      break;
-    case 6:
-      state_timer = 0;
-  }
-}
-
-uint8_t avail_counter = 0;
-
-void disp_lcd_meter()
-{
-  float instantCurrrent_A = eic.GetLineCurrentA();
-			float instantVoltage_A  = eic.GetLineVoltageA();
-			float instantPower_A = 0.0f;
-
-			if(instantCurrrent_A < 0.15){
-				instantPower_A = 0;
-			}else{
-				instantPower_A = (instantCurrrent_A * instantVoltage_A)/1000.0;
-			}
-
-			float instantCurrrent_B = eic.GetLineCurrentB();
-			int instantVoltage_B  = eic.GetLineVoltageB();
-			float instantPower_B = 0.0f;
-
-			if(instantCurrrent_B < 0.15){
-				instantPower_B = 0;
-			}else{
-				instantPower_B = (instantCurrrent_B * instantVoltage_B)/1000.0;
-			}
-
-			float instantCurrrent_C = eic.GetLineCurrentC();
-			int instantVoltage_C = eic.GetLineVoltageC();
-			float instantPower_C = 0.0f;
-
-			if(instantCurrrent_C < 0.15){
-				instantPower_C = 0;
-			}else{
-				instantPower_C = (instantCurrrent_C * instantVoltage_C)/1000.0;
-			}
-  switch(disp_evse)
-  {
-    case 1: if(disp_evse_A)
-            {
-              if (notFaulty_A && !EMGCY_FaultOccured_A)
-              {
-                //connector, voltage, current, power
-                displayEnergyValues_Disp_AC("1",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-              }
-              else
-              {
-              avail_counter ++;
-              switch(fault_code_A)
-              {
-                case -1: break; //It means default. 
-                case 0: displayEnergyValues_Disp_AC("1-Over Voltage",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 1:  displayEnergyValues_Disp_AC("1-Under Voltage",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 2: displayEnergyValues_Disp_AC("1-Over Current",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 3: displayEnergyValues_Disp_AC("1-Under Current",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 4: displayEnergyValues_Disp_AC("1-Over Temp",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-
-                    break;
-                case 5: displayEnergyValues_Disp_AC("1-Under Temp",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 6: displayEnergyValues_Disp_AC("1-GFCI",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 7:  displayEnergyValues_Disp_AC("1-Earth Disc",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                default: SerialMon.println(F("Default in display"));
-              }  
-             }
-             checkForResponse_Disp();
-            }
-            else // we shall use this case to refresh home page.
-            {
-              if(!notFaulty_A || EMGCY_FaultOccured_A)
-			        {
-              avail_counter++;
-              }
-                     
-            }
-            
-            break;
-    case 2: if(disp_evse_B)
-            {
-                if (notFaulty_B && !EMGCY_FaultOccured_B)
-                {
-                 displayEnergyValues_Disp_AC("2",String(instantVoltage_B),String(instantCurrrent_B),String(instantPower_B));
-                }
-                else
-                {
-                  avail_counter++;
-                switch(fault_code_B)
-                {
-                   case -1: break; //It means default. 
-                case 0: displayEnergyValues_Disp_AC("2-Over Voltage",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 1:  displayEnergyValues_Disp_AC("2-Under Voltage",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 2: displayEnergyValues_Disp_AC("2-Over Current",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 3: displayEnergyValues_Disp_AC("2-Under Current",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 4: displayEnergyValues_Disp_AC("2-Over Temp",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-
-                    break;
-                case 5: displayEnergyValues_Disp_AC("2-Under Temp",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 6: displayEnergyValues_Disp_AC("2-GFCI",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 7:  displayEnergyValues_Disp_AC("2-Earth Disc",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                default: SerialMon.println(F("Default in display"));
-                }
-                }
-              checkForResponse_Disp();
-            }
-            else
-            {
-              if(!notFaulty_B || EMGCY_FaultOccured_B)
-			        {
-              avail_counter++;
-              }
-              
-            }
-             
-            break;
-    case 3: if(disp_evse_C)
-            {
-                if (notFaulty_C && !EMGCY_FaultOccured_C)
-                {
-                displayEnergyValues_Disp_AC("3",String(instantVoltage_C),String(instantCurrrent_C),String(instantPower_C));
-                }
-                else
-                {
-                  avail_counter++;
-                  switch(fault_code_C)
-                {
-                   case -1: break; //It means default. 
-                case 0: displayEnergyValues_Disp_AC("3-Over Voltage",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 1:  displayEnergyValues_Disp_AC("3-Under Voltage",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 2: displayEnergyValues_Disp_AC("3-Over Current",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 3: displayEnergyValues_Disp_AC("3-Under Current",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 4: displayEnergyValues_Disp_AC("3-Over Temp",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-
-                    break;
-                case 5: displayEnergyValues_Disp_AC("3-Under Temp",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 6: displayEnergyValues_Disp_AC("3-GFCI",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                case 7:  displayEnergyValues_Disp_AC("3-Earth Disc",String(instantVoltage_A),String(instantCurrrent_A),String(instantPower_A));
-                    break;
-                default: SerialMon.println(F("Default in display"));
-                }
-                }
- 
-            checkForResponse_Disp();
-  
-            }
-            else
-            {
-              if(!notFaulty_C || EMGCY_FaultOccured_C)
-			        {
-              avail_counter++;
-              }
-              
-              
-            }
-             
-            
-            break;
-    default: Serial.println(F("**Display default**"));
-            break;
-  }
-  /* 
-  * @brief: If all 3 are faulted, then set the response to rfid unavailable.
-  */
-  if(avail_counter==3)
-  {
-    setHeader("RFID UNAVAILABLE");
-    checkForResponse_Disp();
-    avail_counter = 0;
-  }
-
-  if(flag_tapped)
-  {
-					setHeader("TAP RFID TO START/STOP");
-    			checkForResponse_Disp();
-          flag_tapped = false;
-  }
-
-  if(flag_unfreeze)
-  {
-  if(disp_evse_A == false)
-  {
-    if(disp_evse_B == false)
-    {
-    if(disp_evse_C == false)
-    {
-      flag_freeze = false;
-      flag_unfreeze = false;
-    }
-    }
-  }
-  }
-
-  //if(disp_evse_A || disp_evse_B || disp_evse_C)
-  if(flag_freeze)
-  {
-    Serial.println(F("**skip**"));
-  }
-  else
-  {
-     if(isInternetConnected)
-                {
-                   if(notFaulty_A && !EMGCY_FaultOccured_A && !disp_evse_A)
-                   {
-              connAvail(1,"AVAILABLE");
-              checkForResponse_Disp();
-              setHeader("TAP RFID TO START/STOP");
-              checkForResponse_Disp();
-                   }
-                     if(notFaulty_B && !EMGCY_FaultOccured_B && !disp_evse_B)
-                   {
-              connAvail(2,"AVAILABLE");
-              checkForResponse_Disp();
-              setHeader("TAP RFID TO START/STOP");
-              checkForResponse_Disp();
-                   }
-                   if(notFaulty_C && !EMGCY_FaultOccured_C && !disp_evse_C)
-                   {
-              connAvail(3,"AVAILABLE");
-              checkForResponse_Disp();
-              setHeader("TAP RFID TO START/STOP");
-              checkForResponse_Disp();
-                   }
-              
-              
-                }
-  }
-}
-
-#endif
-
-#if LCD_ENABLED
-unsigned long onTime = 0;
-uint8_t state_timer = 0;
-uint8_t disp_evse = 0;
-extern bool disp_evse_A;
-extern bool disp_evse_B;
-extern bool disp_evse_C;
-extern bool notFaulty_A;
-extern bool notFaulty_B;
-extern bool notFaulty_C;
-extern int8_t fault_code_A;
-extern int8_t fault_code_B;
-extern int8_t fault_code_C;
-void stateTimer()
-{
-  switch (state_timer)
-  {
-    case 0:
-      onTime = millis();
-      state_timer = 1;
-      disp_evse = 1;
-      break;
-    case 1:
-      if ((millis() - onTime) > 3000)
-      {
-        state_timer = 2;
-      }
-      break;
-    case 2:
-      onTime = millis();
-      state_timer = 3;
-      disp_evse = 2;
-      break;
-    case 3:
-      if ((millis() - onTime) > 3000)
-      {
-        state_timer = 4;
-      }
-      break;
-    case 4:
-     onTime = millis();
-     state_timer = 5;
-     disp_evse = 3;
-      break;
-    case 5:
-     if ((millis() - onTime) > 3000)
-      {
-        state_timer = 6;
-      }
-      break;
-    case 6:
-      state_timer = 0;
-  }
-}
-
-void disp_lcd_meter()
-{
-  float instantCurrrent_A = eic.GetLineCurrentA();
-			float instantVoltage_A  = eic.GetLineVoltageA();
-			float instantPower_A = 0.0f;
-
-			if(instantCurrrent_A < 0.15){
-				instantPower_A = 0;
-			}else{
-				instantPower_A = (instantCurrrent_A * instantVoltage_A)/1000.0;
-			}
-
-			float instantCurrrent_B = eic.GetLineCurrentB();
-			int instantVoltage_B  = eic.GetLineVoltageB();
-			float instantPower_B = 0.0f;
-
-			if(instantCurrrent_B < 0.15){
-				instantPower_B = 0;
-			}else{
-				instantPower_B = (instantCurrrent_B * instantVoltage_B)/1000.0;
-			}
-
-			float instantCurrrent_C = eic.GetLineCurrentC();
-			int instantVoltage_C = eic.GetLineVoltageC();
-			float instantPower_C = 0.0f;
-
-			if(instantCurrrent_C < 0.15){
-				instantPower_C = 0;
-			}else{
-				instantPower_C = (instantCurrrent_C * instantVoltage_C)/1000.0;
-			}
-  switch(disp_evse)
-  {
-    case 1: if(disp_evse_A)
-            {
-              lcd.clear();
-              lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-              if (notFaulty_A)
-              {
-              lcd.print("*****CHARGING 1*****"); // You can make spaces using well... spaces
-               lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-                lcd.print("VOLTAGE(v):");
-                lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
-                lcd.print(String(instantVoltage_A));
-                lcd.setCursor(0, 2);
-                lcd.print("CURRENT(A):");
-                lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
-                lcd.print(String(instantCurrrent_A)); 
-                lcd.setCursor(0, 3);
-                lcd.print("POWER(KW) :"); 
-                lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-                lcd.print(String(instantPower_A));
-              }
-              else
-              {
-              
-              switch(fault_code_A)
-              {
-                case -1: break; //It means default. 
-                case 0: lcd.print("Connector1-Over Voltage");
-                    break;
-                case 1: lcd.print("Connector1-Under Voltage");
-                    break;
-                case 2: lcd.print("Connector1-Over Current");
-                    break;
-                case 3: lcd.print("Connector1-Under Current");
-                    break;
-                case 4: lcd.print("Connector1-Over Temp");
-                    break;
-                case 5: lcd.print("Connector1-Under Temp");
-                    break;
-                case 6: lcd.print("Connector1-GFCI"); // Not implemented in AC001
-                    break;
-                case 7: lcd.print("Connector1-Earth Disc");
-                    break;
-                default: lcd.print("*****FAULTED 1*****"); // You can make spaces using well... spacesbreak;
-              }  
-             }
-            }
-            break;
-    case 2: if(disp_evse_B)
-            {
-               lcd.clear();
-                lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-                if (notFaulty_B)
-                {
-                lcd.print("*****CHARGING 2*****"); // You can make spaces using well... spaces
-                lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-                lcd.print("VOLTAGE(v):");
-                lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
-                lcd.print(String(instantVoltage_B));
-                lcd.setCursor(0, 2);
-                lcd.print("CURRENT(A):");
-                lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
-                lcd.print(String(instantCurrrent_B)); 
-                lcd.setCursor(0, 3);
-                lcd.print("POWER(KW) :"); 
-                lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-                lcd.print(String(instantPower_B));
-                }
-                else
-                {
-                switch(fault_code_B)
-                {
-                  case -1: break; //It means default. 
-                  case 0: lcd.print("Connector2-Over Voltage");
-                      break;
-                  case 1: lcd.print("Connector2-Under Voltage");
-                      break;
-                  case 2: lcd.print("Connector2-Over Current");
-                      break;
-                  case 3: lcd.print("Connector2-Under Current");
-                      break;
-                  case 4: lcd.print("Connector2-Over Temp");
-                      break;
-                  case 5: lcd.print("Connector2-Over Temp");
-                      break;
-                  case 6: lcd.print("Connector2-GFCI"); // Not implemented in AC001
-                      break;
-                  case 7: lcd.print("Connector2-Earth Disc");
-                      break;
-                  default: lcd.print("*****FAULTED 2*****"); // You can make spaces using well... spacesbreak;
-                }
-                }
- 
-            }
-            break;
-    case 3: if(disp_evse_C)
-            {
-              lcd.clear();
-                lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-                if (notFaulty_C)
-                {
-                lcd.print("*****CHARGING 3*****"); // You can make spaces using well... spaces
-                lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
-                lcd.print("VOLTAGE(v):");
-                lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
-                lcd.print(String(instantVoltage_C));
-                lcd.setCursor(0, 2);
-                lcd.print("CURRENT(A):");
-                lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
-                lcd.print(String(instantCurrrent_C)); 
-                lcd.setCursor(0, 3);
-                lcd.print("POWER(KW) :"); 
-                lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-                lcd.print(String(instantPower_C));
-                }
-                else
-                {
-                  switch(fault_code_C)
-                {
-                  case -1: break; //It means default. 
-                  case 0: lcd.print("Connector3-Over Voltage");
-                      break;
-                  case 1: lcd.print("Connector3-Under Voltage");
-                      break;
-                  case 2: lcd.print("Connector3-Over Current");
-                      break;
-                  case 3: lcd.print("Connector3-Under Current");
-                      break;
-                  case 4: lcd.print("Connector3-Over Temp");
-                      break;
-                  case 5: lcd.print("Connector3-Over Temp");
-                      break;
-                  case 6: lcd.print("Connector3-GFCI"); // Not implemented in AC001
-                      break;
-                  case 7: lcd.print("Connector3-Earth Disc");
-                      break;
-                  default: lcd.print("*****FAULTED 3*****"); // You can make spaces using well... spacesbreak;
-                }
-                }
- 
-
-  
-            }
-            break;
-    default: Serial.println(F("**Display default**"));
-            break;
-  }
-}
-#endif

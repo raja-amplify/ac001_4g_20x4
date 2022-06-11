@@ -24,17 +24,25 @@ void RemoteStartTransaction::processReq(JsonObject payload) {
 	Serial.println("Connector ID: "+ String(connectorId));
 	//Serial.println(String(getChargePointStatusService_A()->inferenceStatus());
 	if(connectorId == 1 && getChargePointStatusService_A()->inferenceStatus() == ChargePointStatus::Available){
+		#if DISPLAY_ENABLED
 		flag_freeze = true;
+		#endif
 		getChargePointStatusService_A()->authorize(idTag,connectorId);
 	}else if(connectorId == 2 && getChargePointStatusService_B()->inferenceStatus() == ChargePointStatus::Available){
+		#if DISPLAY_ENABLED
 		flag_freeze = true;
+		#endif
 		getChargePointStatusService_B()->authorize(idTag,connectorId);
 	}else if(connectorId ==3 && getChargePointStatusService_C()->inferenceStatus() == ChargePointStatus::Available){
+		#if DISPLAY_ENABLED
 		flag_freeze = true;
+		#endif
 		getChargePointStatusService_C()->authorize(idTag,connectorId);
 	}else{
+		#if DISPLAY_ENABLED
 		flag_freeze = false;
 		flag_unfreeze = true;
+		#endif
 		Serial.println(F("Unable to start txn Connector is busy"));
 	}
 	/*

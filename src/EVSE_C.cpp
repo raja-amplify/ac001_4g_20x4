@@ -612,7 +612,9 @@ void EVSE_C_loop() {
 					if (DEBUG_OUT) Serial.print(F("[EVSE_C] Opening Relays.\n"));
 					reasonForStop_C = 3; // Local
 					requestForRelay(START,3);
+					#if DISPLAY_ENABLED
 					flag_tapped = true; 
+					#endif
 					/*requestLed(ORANGE,START,3);
     				delay(1200);
     				requestLed(WHITE,START,3);
@@ -620,7 +622,7 @@ void EVSE_C_loop() {
     				requestLed(GREEN,START,3);
    				 	delay(1000);*/
 					if(DEBUG_OUT) Serial.println(F("[EVSE_C] Started Drawing Energy"));
-					displayMeterValuesC();
+					//displayMeterValuesC();
 				} else if (getChargePointStatusService_C()->getEmergencyRelayClose() == true) {
 						Serial.println(F("The voltage or current is out or range. FAULTY CONDITION DETECTED."));
 					}
@@ -675,7 +677,7 @@ void EVSE_C_loop() {
 
 				 }else{
 				 	counter_drawingCurrent_C = 0;
-					currentCounterThreshold_C = 1; // 2 ideally.
+					currentCounterThreshold_C = 60; // 2 ideally.
 				 	Serial.println(F("counter_drawingCurrent Reset"));
 
 				 }

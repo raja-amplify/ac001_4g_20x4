@@ -640,7 +640,9 @@ void EVSE_B_loop() {
 					reasonForStop_B = 3; // Local
 					if (DEBUG_OUT) Serial.print(F("[EVSE_B] Opening Relays.\n"));
 					requestForRelay(START,2);
+					#if DISPLAY_ENABLED
 					 flag_tapped = true;
+					#endif
 					/*requestLed(ORANGE,START,2);
     				delay(1200);
     				requestLed(WHITE,START,2);
@@ -704,7 +706,7 @@ void EVSE_B_loop() {
 
 				 }else{
 				 	counter_drawingCurrent_B = 0;
-				    currentCounterThreshold_B = 2;
+				    currentCounterThreshold_B = 60;
 				 	Serial.println(F("counter_drawing Current Reset"));
 
 				 }

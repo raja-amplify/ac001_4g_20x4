@@ -4,6 +4,7 @@
 #include<SoftwareSerial.h>
 #include <StreamUtils.h>
 #include<WiFi.h>
+#include "dwin.h"
 /* int requestConnectorStatus(); returns the connector Id.
  * {"type":"request","object":"connector"} ::: {"type":"response","object":"connector","connectorId": int}
  * 
@@ -29,6 +30,7 @@ int requestConnectorStatus();
 void Master_setup();
 int requestforCP_IN();
 bool requestforCP_OUT(int);
+//int8_t dwin_input();
 
 
 #define WAIT_TIMEOUT 		5000

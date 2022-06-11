@@ -23,12 +23,18 @@ extern unsigned char change_page[10];
 extern unsigned char HR[8];
 extern unsigned char MINS[8];
 extern unsigned char SEC[8];
-
+extern unsigned char cid1[7];
+extern unsigned char cid2[7];
+extern unsigned char cid3[7];
 #endif
 
 extern bool disp_evse_A;
 extern bool disp_evse_B;
 extern bool disp_evse_C;
+
+extern bool flag_start_txn_A;
+extern bool flag_start_txn_B;
+extern bool flag_start_txn_C;
 
 extern int globalmeterstartA;
 extern unsigned long st_timeA;
@@ -86,6 +92,9 @@ DynamicJsonDocument* StopTransaction::createReq() {
   unsigned long stop_time=0;
   if (getMeteringService() != NULL) {
     if(connectorId == 1){
+      if(flag_start_txn_A)
+      {
+        flag_start_txn_A = false;
       meterStop = getMeteringService()->currentEnergy_A();
       stop_time = millis();
       currentCounterThreshold_A = 60;
@@ -125,9 +134,9 @@ DynamicJsonDocument* StopTransaction::createReq() {
   int hr = seconds/3600;                                                        //Number of seconds in an hour
   int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
   int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
-  
+   err = DWIN_SET(cid1, sizeof(cid1) / sizeof(cid1[0]));
       // Take to page 2. 
-      change_page[9] = 2; 
+      change_page[9] = 1; 
       err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
       //kwh[7] = float((meterStop-globalmeterstartA)/1000);
       //kwh[7] = int((meterStop-globalmeterstartA)/1000);
@@ -149,7 +158,12 @@ DynamicJsonDocument* StopTransaction::createReq() {
       err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
       delay(50);
   #endif
-    }else if(connectorId == 2){
+      }
+    }
+    else if(connectorId == 2){
+       if(flag_start_txn_B)
+      {
+        flag_start_txn_B = false;
       meterStop = getMeteringService()->currentEnergy_B();
       stop_time = millis();
       currentCounterThreshold_B = 60;
@@ -190,9 +204,12 @@ uint8_t err = 0;
   int hr = seconds/3600;                                                        //Number of seconds in an hour
   int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
   int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
-  
+   
+          err = DWIN_SET(cid2, sizeof(cid2) / sizeof(cid2[0]));
+                 
+          
       // Take to page 2. 
-      change_page[9] = 2; 
+      change_page[9] = 1; 
       err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
       //kwh[7] = float((meterStop-globalmeterstartA)/1000);
       kwh[7] = int((meterStop-globalmeterstartA)/1000);
@@ -210,7 +227,11 @@ uint8_t err = 0;
       delay(50);
 
   #endif
+      }
     }else if(connectorId == 3){
+       if(flag_start_txn_C)
+      {
+        flag_start_txn_C = false;
       meterStop = getMeteringService()->currentEnergy_C();
       stop_time = millis();
       //reset the counter.
@@ -255,7 +276,8 @@ uint8_t err = 0;
   int sec = seconds-hr*3600-mins*60;                                            //Remove the number of hours and minutes, leaving only seconds.
   
       // Take to page 2. 
-      change_page[9] = 2; 
+       err = DWIN_SET(cid3, sizeof(cid3) / sizeof(cid3[0]));
+      change_page[9] = 1; 
       err = DWIN_SET(change_page,sizeof(change_page)/sizeof(change_page[0]));
       //kwh[7] = float((meterStop-globalmeterstartA)/1000);
       kwh[7] = int((meterStop-globalmeterstartA)/1000);
@@ -275,6 +297,7 @@ uint8_t err = 0;
   #endif
 
     }
+    }
 
   }
 
@@ -288,9 +311,10 @@ uint8_t err = 0;
   //   transactionId = getChargePointStatusService()->getTransactionId();
   // }
   payload["transactionId"] = transactionId;
-
+  #if DISPLAY_ENABLED
   flag_unfreeze = true;
-
+  #endif
+  
   switch(connectorId)
   {
     case 1: 

@@ -192,7 +192,7 @@ void ChargePointStatusService::loop() {
 				//reasonForStop = Other;
 				#if DWIN_ENABLED
 				fault_overVolt[4] = 0X51;
-				err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
+				//err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
 				delay(10);
 				#endif
 				
@@ -201,14 +201,14 @@ void ChargePointStatusService::loop() {
 			//reasonForStop = Other;
 			#if DWIN_ENABLED
 			fault_noearth[4] = 0X51;
-			err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+			//err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
 			delay(10);
 			#endif
 			
 		}else{
 			#if DWIN_ENABLED
 			fault_underVolt[4] = 0X51;
-			err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+			//err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
 			delay(10);
 			#endif
 			//reasonForStop = Other;
@@ -218,7 +218,7 @@ void ChargePointStatusService::loop() {
 	}else if(getChargePointStatusService_A()->getUnderCurrent() == true || getChargePointStatusService_B()->getUnderCurrent() == true || getChargePointStatusService_C()->getUnderCurrent() == true){
 		#if DWIN_ENABLED
 		fault_underCurr[4] = 0X51;
-		err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
+		//err = DWIN_SET(fault_underCurr,sizeof(fault_underCurr)/sizeof(fault_underCurr[0]));
 		delay(10);
 		#endif
 		//reasonForStop = EVDisconnected;
@@ -227,14 +227,14 @@ void ChargePointStatusService::loop() {
 	//reasonForStop = Other;
 	#if DWIN_ENABLED
 	fault_overCurr[4] = 0X51;
-	err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
+	//err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
 	delay(10);
 	#endif
 	}else if(getChargePointStatusService_A()->getUnderTemperature() == true){
 		//reasonForStop = Other;
 		#if DWIN_ENABLED
 			fault_overTemp[4] = 0X51;
-			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+			//err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
 			delay(10);
 		#endif
 
@@ -243,7 +243,7 @@ void ChargePointStatusService::loop() {
 
 		#if DWIN_ENABLED
 			fault_overTemp[4] = 0X51;
-			err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+			//err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
 			delay(10);
 		#endif
 	}
@@ -251,7 +251,7 @@ void ChargePointStatusService::loop() {
 		//reasonForStop = EmergencyStop;
 		#if DWIN_ENABLED
 			fault_emgy[4] = 0X51;
-			err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
+			//err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
 			delay(10);
 		#endif
 	}

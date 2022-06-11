@@ -191,6 +191,26 @@ double  ATM90E36::GetLineVoltageA() {
     reasonForStop_A = Other;
     reasonForStop_B = Other; 
     reasonForStop_C = Other;  
+    #if DWIN_ENABLED
+    fault_noearth[4] = 0X66; // In the fourth page.
+    fault_noearth[5] = 0X00; // In the fourth page.
+    err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+    fault_noearth[4] = 0X51; // In the fourth page.
+    fault_noearth[5] = 0X00; // In the fourth page.
+    err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+    fault_noearth[4] = 0X71; // In the fifth page.
+    fault_noearth[5] = 0X00; // In the fourth page.
+    err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+    fault_noearth[4] = 0X71; // In the fifth page.
+    fault_noearth[5] = 0X50; // In the fourth page.
+    err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+    fault_noearth[4] = 0X7B; // In the sixth page.
+    fault_noearth[5] = 0X00; // In the fourth page.
+    err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+    fault_noearth[4] = 0X7B; // In the sixth page.
+    fault_noearth[5] = 0X50; // In the fourth page.
+    err = DWIN_SET(fault_noearth,sizeof(fault_noearth)/sizeof(fault_noearth[0]));
+    #endif
     #if LCD_ENABLED
     lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
     lcd.print("                    ");//Clear the line
@@ -253,9 +273,11 @@ double  ATM90E36::GetLineVoltageA() {
     lcd.print("A: NO POWER");
     #endif
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X51; // In the first page.
-    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     fault_underVolt[4] = 0X66; // In the fourth page.
+    fault_underVolt[5] = 0X00; // In the fourth page.
+    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+    fault_underVolt[4] = 0X51; // In the fourth page.
+    fault_underVolt[5] = 0X00; // In the fourth page.
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
 	  if(DEBUG_OUT) Serial.println(F("[EVSE_A] Under Voltage"));
@@ -288,9 +310,11 @@ double  ATM90E36::GetLineVoltageA() {
     lcd.print("A: OVER VOLTAGE");
     #endif
     #if DWIN_ENABLED
-    fault_overVolt[4] = 0X51;
-    err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
     fault_overVolt[4] = 0X66;
+    fault_overVolt[5] = 0X00;
+    err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
+    fault_overVolt[4] = 0X51;
+    fault_overVolt[5] = 0X00;
     err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
     #endif
 	  if(DEBUG_OUT) Serial.println(F("[EVSE_A] Over Voltage"));
@@ -351,9 +375,12 @@ double  ATM90E36::GetLineVoltageB() {
     lcd.print("B: NO POWER");
     #endif
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X51;
-    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     fault_underVolt[4] = 0X71;
+    fault_underVolt[5] = 0X00;
+    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+
+     fault_underVolt[4] = 0X51;
+     fault_underVolt[5] = 0X00;
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
     if(DEBUG_OUT) Serial.println(F("[EVSE_B] Under Voltage"));
@@ -385,9 +412,11 @@ double  ATM90E36::GetLineVoltageB() {
     lcd.print("B: OVER VOLTAGE");
     #endif
     #if DWIN_ENABLED
-    fault_overVolt[4] = 0X51;
-    err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
     fault_overVolt[4] = 0X71;
+    fault_overVolt[5] = 0X00;
+    err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
+     fault_overVolt[4] = 0X51;
+     fault_overVolt[5] = 0X00;
     err = DWIN_SET(fault_overVolt,sizeof(fault_overVolt)/sizeof(fault_overVolt[0]));
     #endif
     if(DEBUG_OUT) Serial.println(F("[EVSE_B] Over Voltage"));
@@ -449,9 +478,11 @@ double  ATM90E36::GetLineVoltageC() {
     lcd.print("C: NO POWER");
     #endif
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X51;
-    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     fault_underVolt[4] = 0X7B;
+    fault_underVolt[5] = 0X00;
+    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+    fault_underVolt[4] = 0X51;
+    fault_underVolt[5] = 0X00;
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
 	  return custom_round(volt);
@@ -483,9 +514,11 @@ double  ATM90E36::GetLineVoltageC() {
     lcd.print("C: OVER VOLTAGE");
     #endif
     #if DWIN_ENABLED
-    fault_underVolt[4] = 0X51;
-    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     fault_underVolt[4] = 0X7B;
+    fault_underVolt[5] = 0X00;
+    err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
+    fault_underVolt[4] = 0X51;
+    fault_underVolt[5] = 0X00;
     err = DWIN_SET(fault_underVolt,sizeof(fault_underVolt)/sizeof(fault_underVolt[0]));
     #endif
 	  return custom_round(volt);
@@ -542,9 +575,11 @@ double ATM90E36::GetLineCurrentA() {
     lcd.print("A: OVER CURRENT");
     #endif
     #if DWIN_ENABLED
-    fault_overCurr[4] = 0X51;
-    err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     fault_overCurr[4] = 0X66;
+    fault_overCurr[5] = 0X00;
+    err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
+    fault_overCurr[4] = 0X51;
+    fault_overCurr[5] = 0X00;
     err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     #endif
 		return custom_round(curr);
@@ -593,9 +628,11 @@ double ATM90E36::GetLineCurrentB() {
     lcd.print("B: OVER CURRENT");
     #endif
     #if DWIN_ENABLED
-    fault_overCurr[4] = 0X51;
-    err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     fault_overCurr[4] = 0X71;
+    fault_overCurr[5] = 0X00;
+    err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
+    fault_overCurr[4] = 0X51;
+    fault_overCurr[5] = 0X00;
     err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     #endif
     return custom_round(curr);
@@ -646,9 +683,11 @@ double ATM90E36::GetLineCurrentC() {
     lcd.print("C: OVER CURRENT");
     #endif
     #if DWIN_ENABLED
-    fault_overCurr[4] = 0X51;
-    err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     fault_overCurr[4] = 0X7B;
+    fault_overCurr[5] = 0X00;
+    err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
+    fault_overCurr[4] = 0X51;
+    fault_overCurr[5] = 0X00;
     err = DWIN_SET(fault_overCurr,sizeof(fault_overCurr)/sizeof(fault_overCurr[0]));
     #endif
     return custom_round(curr);
@@ -841,9 +880,11 @@ double ATM90E36::GetTemperature() {
     lcd.print("A: UNDER TEMP");
     #endif
     #if DWIN_ENABLED
-    fault_overTemp[4] = 0X51;
-    err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
     fault_overTemp[4] = 0X66;
+    fault_overTemp[5] = 0X00;
+    err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+    fault_overTemp[4] = 0X51;
+    fault_overTemp[5] = 0X00;
     err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
     #endif
 	  return temp;
@@ -869,9 +910,11 @@ double ATM90E36::GetTemperature() {
     lcd.print("A: OVER TEMP");
     #endif
     #if DWIN_ENABLED
-    fault_overTemp[4] = 0X51;
-    err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
     fault_overTemp[4] = 0X66;
+    fault_overTemp[4] = 0X50;
+    err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
+    fault_overTemp[4] = 0X51;
+    fault_overTemp[4] = 0X00;
     err = DWIN_SET(fault_overTemp,sizeof(fault_overTemp)/sizeof(fault_overTemp[0]));
     #endif
 	  return temp;

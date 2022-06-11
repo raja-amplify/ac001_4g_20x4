@@ -6,6 +6,10 @@
 #include "OcppEngine.h"
 #include "Variants.h"
 
+#if DISPLAY_ENABLED
+extern bool flag_freeze;
+#endif
+
 Authorize::Authorize() {
 	idTag = String("defaultCPIDTag"); //Use a default payload. In the typical use case of this library, you probably you don't even need Authorization at all
 }
@@ -42,6 +46,9 @@ void Authorize::processConf(JsonObject payload){
 
 	} else {
 		Serial.print(F("[Authorize] Request has been denied!"));
+		#if DISPLAY_ENABLED
+		flag_freeze = false;
+		#endif
 	}
 }
 

@@ -1,13 +1,33 @@
 #include "Master.h"
+#include "Variants.h"
 
 SoftwareSerial masterSerial(25,33); //25 Rx, 33 Tx
 StaticJsonDocument<250> txM_doc;
 StaticJsonDocument<250> rxM_doc;
 
+extern int8_t button;
+
 void customflush(){
   while(masterSerial.available() > 0)
     masterSerial.read();
 }
+
+#if 0
+/*
+  @brief : Read the touch display
+*/
+#if DWIN_ENABLED
+int8_t dwin_input()
+{
+
+  button = DWIN_read();
+  Serial.printf("Button pressed : %d", button);
+  //delay(50);
+  return button;
+
+}
+#endif
+#endif 
 
 int requestConnectorStatus(){
   txM_doc.clear();
@@ -29,6 +49,7 @@ int requestConnectorStatus(){
   
   startTime = millis();
   while(millis() - startTime < 20000/*WAIT_TIMEOUT*/){ // waiting for response from slave
+  
     if(masterSerial.available()){
       
       ReadLoggingStream loggingStream(masterSerial, Serial);
@@ -447,9 +468,12 @@ void Master_setup() {
   
  // Serial.begin(115200);
   masterSerial.begin(9600, SWSERIAL_8N1, 25,33, false,256);// Required to fix the deserialization error
-  Serial.println(F("***EVRE***AC001**V_1_1***BEGIN***"));
+  Serial.println(F("***EVRE***AC001****BEGIN***"));
   Serial.println(F("***VERSION HISTORY***"));
   Serial.println(F("4G support - G. Raja Sumant 21/04/2022")); 
+  Serial.println(F("Reason for stop - G. Raja Sumant 31/05/2022")); 
+  Serial.println(F("20x4,DWIN, arduino uno - G. Raja Sumant 31/05/2022")); 
+  Serial.println(F("Firmware version in the boot notification - G. Raja Sumant 31/05/2022")); 
   Serial.print("[MASTER] ESP32 Board MAC Address:  ");
   Serial.println(WiFi.macAddress());
 

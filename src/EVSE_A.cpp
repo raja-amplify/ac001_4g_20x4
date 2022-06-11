@@ -35,6 +35,7 @@ extern unsigned char change_page[10];
 extern unsigned char avail[22];
 extern unsigned char charging[28];
 extern unsigned char cid1[7];
+extern unsigned char fault_emgy[28];
 #endif
 //new variable names defined by @Pulkit. might break the build.
 OnBoot_A onBoot_A;
@@ -679,8 +680,9 @@ void EVSE_A_loop() {
 					if (DEBUG_OUT) Serial.print(F("[EVSE_A] Opening Relays.\n"));
 					reasonForStop_A = 3; // Local
 					requestForRelay(START,1);
+					#if DISPLAY_ENABLED
 					flag_tapped = true;
-
+					#endif
 					//No need of such an action
 					/*requestLed(ORANGE,START,1);
     				delay(1200);
@@ -744,7 +746,8 @@ void EVSE_A_loop() {
 
 				 }else{
 				 	counter_drawingCurrent_A = 0;
-					currentCounterThreshold_A = 2;
+					//currentCounterThreshold_A = 2;
+					currentCounterThreshold_A = 60; //ARAI expects 2 
 				 	Serial.println(F("counter_drawing Current Reset"));
 
 				 }
@@ -807,6 +810,17 @@ void emergencyRelayClose_Loop_A(){
 				reasonForStop_A = 0;
 				disp_evse_A = false;
 				requestLed(BLINKYRED,START,1);
+				#if DWIN_ENABLED
+				uint8_t err = 0;
+   // fault_emgy[4] = 0X51; // In the first page.
+    //err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
+    fault_emgy[4] = 0X66; // In the fourth page.
+    err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
+    fault_emgy[4] = 0X71; // In the fourth page.
+    err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
+    fault_emgy[4] = 0X7B; // In the fourth page.
+    err = DWIN_SET(fault_emgy,sizeof(fault_emgy)/sizeof(fault_emgy[0]));
+    #endif
 				  #if DISPLAY_ENABLED
 				  setHeader("RFID UNAVAILABLE");
     			  checkForResponse_Disp();
@@ -990,11 +1004,11 @@ char *EVSE_A_getChargePointVendor() {
 }
 
 char *EVSE_A_getChargePointModel() {
-	return "AC001_4_3";
+	return "AC001_4_4";
 }
 
 char *EVSE_A_getFirmwareVersion() {
-	return "AC001_4_3";
+	return "AC001_4_4";
 }
 
 String EVSE_A_getCurrnetIdTag(MFRC522 * mfrc522) {
@@ -1085,7 +1099,7 @@ void displayMeterValues(){
 		if(millis() - timerDisplay > 10000){
 			timerDisplay = millis();
 			float instantCurrrent_A = eic.GetLineCurrentA();
-			float instantVoltage_A  = eic.GetLineVoltageA();
+			int instantVoltage_A  = eic.GetLineVoltageA();
 			float instantPower_A = 0.0f;
 
 			if(instantCurrrent_A < 0.15){

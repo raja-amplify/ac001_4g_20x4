@@ -37,6 +37,9 @@ void setupOTA() {
             // get lenght of document (is -1 when Server sends no Content-Length header)
             int len = http.getSize();
             updateSize = len;
+            requestLed(WHITE,START,1);
+            requestLed(WHITE,START,2);
+            requestLed(WHITE,START,3);
             Serial.printf("[OTA] Update found, File size(bytes) : %d\n", len);
     
             // get tcp stream
