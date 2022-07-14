@@ -1,41 +1,12 @@
 #include "display_meterValues.h"
 #include "Variants.h"
 #include "ATM90E36.h"
-#include <Preferences.h>
-#include "LCD_I2C.h"
-#include "MeteringService.h"
-#include "OcppMessage.h"
-
-extern LCD_I2C lcd;
 
 extern ATM90E36 eic;
-extern int globalmeterstartA;
-extern int globalmeterstartB;
-extern int globalmeterstartC;
-float online_charging_Enargy_A = 0;
-float online_charging_Enargy_B = 0;
-float online_charging_Enargy_C = 0;
-extern Preferences energymeter;
 extern bool EMGCY_FaultOccured_A;
 extern bool EMGCY_FaultOccured_B;
 extern bool EMGCY_FaultOccured_C;
-extern bool offline_charging_A;
-extern bool offline_charging_B;
-extern bool offline_charging_C;
 
-extern float offline_charging_Enargy_A;
-extern float offline_charging_Enargy_B;
-extern float offline_charging_Enargy_C;
-
-unsigned long offline_t_A = 0;
-unsigned long offline_t_B = 0;
-unsigned long offline_t_C = 0;
-
-time_t lastsampledTimeA_off=0;
-time_t lastsampledTimeB_off=0;
-time_t lastsampledTimeC_off=0;
-
-extern MeteringService* meteringService;
 
 #if DWIN_ENABLED
 #include "dwin.h"
@@ -580,8 +551,6 @@ extern bool notFaulty_C;
 extern int8_t fault_code_A;
 extern int8_t fault_code_B;
 extern int8_t fault_code_C;
-extern LCD_I2C lcd;
-
 void stateTimer()
 {
   switch (state_timer)
@@ -655,7 +624,6 @@ void disp_lcd_meter()
   } else {
     instantPower_C = (instantCurrrent_C * instantVoltage_C) / 1000.0;
   }
-   
   switch (disp_evse)
   {
     case 1: if (disp_evse_A)
@@ -673,34 +641,10 @@ void disp_lcd_meter()
           lcd.print("CURRENT(A):");
           lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
           lcd.print(String(instantCurrrent_A));
-          //lcd.setCursor(0, 3);
-          /*
+          lcd.setCursor(0, 3);
           lcd.print("POWER(KW) :");
           lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
           lcd.print(String(instantPower_A));
-          */
-  
-          lcd.setCursor(0, 3);
-          lcd.print("KWH       :");
-          lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-          if(!offline_charging_A)
-          {
-           //float online_charging_Enargy_A = meteringService->currentEnergy_A();
-           //lcd.print(String(float((online_charging_Enargy_A-globalmeterstartA)/1000)));
-          // energymeter.begin("MeterData",false);  
-        //  float online_charging_Enargy_A = energymeter.getFloat("currEnergy_A",0);
-         // energymeter.end();
-         if((online_charging_Enargy_A-globalmeterstartA) > 0)
-          lcd.print(String(float((online_charging_Enargy_A-globalmeterstartA)/1000)));
-          else
-           lcd.print("0");
-           Serial.println(F("[DISP_METERVALUES]******* online charging***************"));
-          }
-          else
-          {
-             lcd.print(String(float((offline_charging_Enargy_A-globalmeterstartA)/1000)));
-             Serial.println(F("[DISP_METERVALUES]******* offline charging***************"));
-          }
         }
         else
         {
@@ -744,31 +688,10 @@ void disp_lcd_meter()
           lcd.print("CURRENT(A):");
           lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
           lcd.print(String(instantCurrrent_B));
-          // lcd.setCursor(0, 3);
-          // lcd.print("POWER(KW) :");
-          // lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-          // lcd.print(String(instantPower_B));
-          
           lcd.setCursor(0, 3);
-          lcd.print("KWH       :");
+          lcd.print("POWER(KW) :");
           lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-          if(!offline_charging_B)
-          {
-            if((online_charging_Enargy_B-globalmeterstartB )> 0)
-          lcd.print(String(float((online_charging_Enargy_B-globalmeterstartB)/1000)));
-          else
-           lcd.print("0");
-           Serial.println(F("[DISP_METERVALUES]******* online charging***************"));
-          }
-          else
-          {
-             lcd.print(String(float((offline_charging_Enargy_B - globalmeterstartB)/1000)));
-             Serial.println(F("[DISP_METERVALUES]******* offline charging***************"));
-          }
-
-    
-           
-           //lcd.print(String(float((meterStop - globalmeterstartB)/1000)));
+          lcd.print(String(instantPower_B));
         }
         else
         {
@@ -812,28 +735,10 @@ void disp_lcd_meter()
           lcd.print("CURRENT(A):");
           lcd.setCursor(12, 2); // Or setting the cursor in the desired position.
           lcd.print(String(instantCurrrent_C));
-          // lcd.setCursor(0, 3);
-          // lcd.print("POWER(KW) :");
-          // lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-          // lcd.print(String(instantPower_C));
-          
-           lcd.setCursor(0, 3);
-           lcd.print("KWH       :");
-           lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
-           if(!offline_charging_C)
-          {
-             if((online_charging_Enargy_C-globalmeterstartC) > 0)
-          lcd.print(String(float((online_charging_Enargy_C-globalmeterstartC)/1000)));
-          else
-           lcd.print("0");
-           Serial.println(F("[DISP_METERVALUES]******* online charging***************"));
-          }
-          else
-          {
-             lcd.print(String(float((offline_charging_Enargy_C - globalmeterstartC)/1000)));
-             Serial.println(F("[DISP_METERVALUES]******* offline charging***************"));
-          }
-           //lcd.print(String(float((meterStop - globalmeterstartC)/1000)));
+          lcd.setCursor(0, 3);
+          lcd.print("POWER(KW) :");
+          lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
+          lcd.print(String(instantPower_C));
         }
         else
         {

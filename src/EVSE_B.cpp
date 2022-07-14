@@ -56,6 +56,8 @@ extern bool flag_rebootRequired_A;
 
 extern bool flag_ed_A;
 
+extern float minCurr; // For LB nagar hubs
+
 //Reason for stop
 extern uint8_t reasonForStop_B;
 
@@ -99,6 +101,10 @@ ulong relay_timer_B = 0;
 ulong faultTimer_B =0;
 
 ulong timerDisplayB;
+
+//extern const ulong TIMEOUT_EMERGENCY_RELAY_CLOSE;
+const ulong TIMEOUT_EMERGENCY_RELAY_CLOSE_B = 120000;
+
 
 extern LCD_I2C lcd;
 
@@ -201,6 +207,7 @@ void EVSE_B_setup(){
 				if(millis() - timerForRfid > 10000){ //timer for sending led request
 	    		  	requestLed(GREEN,START,2);
 	    		  	timerForRfid = millis();
+					
     		  	}
 			
 				currentIdTag_B = EVSE_B_getCurrnetIdTag(&mfrc522);
@@ -229,6 +236,7 @@ void EVSE_B_setup(){
 				if(millis() - timerForRfid > 10000){ //timer for sending led request
 	    		  	requestLed(GREEN,START,2);
 	    		  	timerForRfid = millis();
+					
     		  	}
 			
 				currentIdTag_B = EVSE_B_getCurrnetIdTag(&mfrc522);
@@ -432,7 +440,7 @@ void EVSE_B_setup(){
     	/**********************Until Offline functionality is implemented***********/
     	//Resume namespace(Preferences)
     	if(getChargePointStatusService_B()->getEmergencyRelayClose() == false){
-    		requestLed(GREEN,START,1);   //temp fix
+    		//requestLed(GREEN,START,2);   //temp fix  // it is affecting offline led functionality
     	}
     	resumeTxn_B.putBool("ongoingTxn_B",false);
     	resumeTxn_B.putString("idTagData_B","");
@@ -684,7 +692,7 @@ void EVSE_B_loop() {
 				 //Current check
 				 drawing_current_B = eic.GetLineCurrentB();
 				 Serial.println("Current B: "+String(drawing_current_B));
-				 if(drawing_current_B <= 0.15){
+				 if(drawing_current_B <= minCurr){
 				 	counter_drawingCurrent_B++;
 				 	//if(counter_drawingCurrent_B > 120){
 					if(counter_drawingCurrent_B > currentCounterThreshold_B)
@@ -758,16 +766,40 @@ bool EMGCY_FaultOccured_B = false;
 
 void emergencyRelayClose_Loop_B(){
 	if(millis() - faultTimer_B > 1000){
+		
+
+			if(getChargePointStatusService_B()->getOverCurrent() == true)
+			{
+			getChargePointStatusService_B()->setEmergencyRelayClose(true);
+			if(getChargePointStatusService_B()->getTransactionId() != -1)
+			{
+			#if LCD_ENABLED
+            lcd.clear();
+ 		    lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+			lcd.print("STATUS: FAULTED");
+			lcd.setCursor(0, 1);
+			lcd.print("B: OVER CURRENT");
+			#endif
+			EVSE_B_StopSession();
+			}
+			}
+
+
+			
 		faultTimer_B = millis();
 		bool EMGCY_status_B = requestEmgyStatus();
 		//Serial.println("EMGCY_Status_B: "+String(EMGCY_status_B));
 		if(EMGCY_status_B == true){
 			if(EMGCY_counter_B++ > 0){
 			//if(EMGCY_counter_B == 0){
+				requestForRelay(STOP,1);
 				requestForRelay(STOP,2);
+				requestForRelay(STOP,3);
 				disp_evse_B = false;
 				reasonForStop_B = 0;
+				requestLed(BLINKYRED,START,1);
 				requestLed(BLINKYRED,START,2);
+				requestLed(BLINKYRED,START,3);
 				 #if DISPLAY_ENABLED
 				 setHeader("RFID UNAVAILABLE");
     			 checkForResponse_Disp();
@@ -858,7 +890,7 @@ void emergencyRelayClose_Loop_B(){
 				}
 
 				if (timeout_active_B && getChargePointStatusService_B()->getTransactionId() != -1) {
-					if (millis() - timeout_start_B >= TIMEOUT_EMERGENCY_RELAY_CLOSE){
+					if (millis() - timeout_start_B >= TIMEOUT_EMERGENCY_RELAY_CLOSE_B){
 						Serial.println("[EVSE_B] Emergency Stop.");
 						flag_evRequestsCharge_B = false;
 						flag_evseStopTransaction_B = true;
@@ -1037,7 +1069,7 @@ void displayMeterValuesB(){
 			float instantVoltage_A  = eic.GetLineVoltageA();
 			float instantPower_A = 0.0f;
 
-			if(instantCurrrent_A < 0.15){
+			if(instantCurrrent_A < minCurr){
 				instantPower_A = 0;
 			}else{
 				instantPower_A = (instantCurrrent_A * instantVoltage_A)/1000.0;
@@ -1047,7 +1079,7 @@ void displayMeterValuesB(){
 			int instantVoltage_B  = eic.GetLineVoltageB();
 			float instantPower_B = 0.0f;
 
-			if(instantCurrrent_B < 0.15){
+			if(instantCurrrent_B < minCurr){
 				instantPower_B = 0;
 			}else{
 				instantPower_B = (instantCurrrent_B * instantVoltage_B)/1000.0;
@@ -1057,7 +1089,7 @@ void displayMeterValuesB(){
 			int instantVoltage_C = eic.GetLineVoltageC();
 			float instantPower_C = 0.0f;
 
-			if(instantCurrrent_C < 0.15){
+			if(instantCurrrent_C < minCurr){
 				instantPower_C = 0;
 			}else{
 				instantPower_C = (instantCurrrent_C * instantVoltage_C)/1000.0;

@@ -2,8 +2,8 @@
 // Copyright Matthias Akstaller 2019 - 2020
 // MIT License
 
-#ifndef EVSE_A_H
-#define EVSE_A_H
+#ifndef EVSE_A_OFFLINE_H
+#define EVSE_A_OFFLINE_H
 
 #include <Arduino.h>
 #include<Preferences.h>
@@ -23,7 +23,7 @@
 #include "StartTransaction.h"
 #include "StopTransaction.h"
 #include "DataTransfer.h"
-
+#include <EEPROM.h>
 #include "CustomGsm.h"
 
 /*
@@ -103,9 +103,9 @@ void displayMeterValues();
 
 //not used
 //void EVSE_afterEvPlug (AfterEvPlug afterEvPlug);
-
+//
 void EVSE_A_loop();
-void emergencyRelayClose_Loop_A();
+void emergencyRelayClose_Loop_A_Offl();
 //other details.
 void EVSE_A_getChargePointSerialNumber(String &out);
 char *EVSE_A_getChargePointVendor();
@@ -120,9 +120,12 @@ void EVSE_A_StartCharging();
 void EVSE_A_Suspended();
 void EVSE_A_StopSession();
 
-void startOfflineTxn();
-void EVSE_stopTransactionByRfid_Off();
-void Offline_Loop();
+void EVSE_A_startOfflineTxn();
+void EVSE_A_offline_Loop();
+void EVSE_A_stopOfflineTxn();
+void EVSE_A_LED_loop();
+void showTxn_Finish();
+
 
 
 #endif

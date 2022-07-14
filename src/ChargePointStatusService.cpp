@@ -10,6 +10,9 @@
 #include "Master.h"
 #include "SimpleOcppOperationFactory.h"
 #include "LCD_I2C.h"
+#include "EVSE_A.h"
+#include "EVSE_B.h"
+#include "EVSE_C.h"
 
 #if DISPLAY_ENABLED
 #include "display.h"
@@ -23,6 +26,13 @@ extern bool notFaulty_C;
 extern bool EMGCY_FaultOccured_A;
 extern bool EMGCY_FaultOccured_B;
 extern bool EMGCY_FaultOccured_C;
+
+extern bool flag_evRequestsCharge_A;
+extern bool			flag_evseStopTransaction_A;
+extern bool			flag_evRequestsCharge_B;
+extern bool			flag_evseStopTransaction_B;
+extern bool			flag_evRequestsCharge_C;
+extern bool			flag_evseStopTransaction_C;
 
 #if DWIN_ENABLED
 #include "dwin.h"
@@ -174,7 +184,7 @@ void ChargePointStatusService::loop() {
 		#if LCD_ENABLED
         lcd.clear();
  		lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
-		lcd.print("****processing****");
+		lcd.print("*****PROCESSING*****");
 		#endif
 		#if DWIN_ENABLED
 		 
@@ -326,11 +336,11 @@ void ChargePointStatusService::loop() {
 			lcd.print("CONNECTION");
 			lcd.setCursor(0, 3);
 			 if(wifi_connect)
-			 lcd.print("CLOUD: wifi");
+			 lcd.print("CLOUD: WIFI");
             else if(gsm_connect)
 			lcd.print("CLOUD: 4G");
 			else
-			lcd.print("CLOUD: offline");
+			lcd.print("CLOUD: OFFLINE");
 			#endif
 			
 			#if DWIN_ENABLED
@@ -417,13 +427,40 @@ void ChargePointStatusService::loop() {
 	// Added a new condition to check the toggling of relays in no earth state.
 			//G. Raja Sumant - 06/05/2022
 			if(getChargePointStatusService_A()->getOverCurrent() == true)
-			getChargePointStatusService_A()->stopEvDrawsEnergy();
+			{
+			//getChargePointStatusService_A()->stopEvDrawsEnergy();
+			//getChargePointStatusService_A()->setEmergencyRelayClose(true);
+			if(getChargePointStatusService_A()->getTransactionId() != -1)
+			{
+			//flag_evRequestsCharge_A = false;
+			//flag_evseStopTransaction_A = true;
+			EVSE_A_StopSession();
+			}
+			}
 
 			if(getChargePointStatusService_B()->getOverCurrent() == true)
-			getChargePointStatusService_B()->stopEvDrawsEnergy();
+			{getChargePointStatusService_B()->stopEvDrawsEnergy();
+			getChargePointStatusService_B()->setEmergencyRelayClose(true);
+			if(getChargePointStatusService_B()->getTransactionId() != -1)
+			{
+			//flag_evRequestsCharge_B = false;
+			//flag_evseStopTransaction_B = true;
+			EVSE_B_StopSession();
+			}
+			}
+
 
 			if(getChargePointStatusService_C()->getOverCurrent() == true)
-			getChargePointStatusService_C()->stopEvDrawsEnergy();
+			{//getChargePointStatusService_C()->stopEvDrawsEnergy();
+			//getChargePointStatusService_C()->setEmergencyRelayClose(true);
+			if(getChargePointStatusService_C()->getTransactionId() != -1)
+			{
+			//flag_evRequestsCharge_C = false;
+			//flag_evseStopTransaction_C = true;
+			EVSE_C_StopSession();
+			}
+			}
+
 
 			
 	#if DWIN_ENABLED

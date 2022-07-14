@@ -15,6 +15,8 @@
 //#include <ArduinoJson.h>
 #include "src/Peripherals.h"
 
+#include "esp32-hal-cpu.h"
+
 #if WIFI_ENABLED
 #include <WiFi.h>
 //#define SSIDW 	"Amplify Mobility_PD"
@@ -32,6 +34,11 @@
 #include "src/EVSE_A.h"
 #include "src/EVSE_B.h"
 #include "src/EVSE_C.h"
+
+#include "src/EVSE_A_Offline.h"
+#include "src/EVSE_B_Offline.h"
+#include "src/EVSE_C_Offline.h"
+
 
 //Master Class
 #include"src/Master.h"
@@ -87,10 +94,13 @@ extern unsigned char change_page[10];
 extern unsigned char tap_rfid[30];
 extern unsigned char clear_tap_rfid[30];
 extern unsigned char CONN_UNAVAIL[28];
+
+
 extern bool flag_faultOccured_A;
 extern bool flag_faultOccured_B;
 extern bool flag_faultOccured_C;
-extern unsigned char v1[8];
+
+extern unsigned char v1[8]; //2];//not connected
 extern unsigned char v2[8];
 extern unsigned char v3[8];
 extern unsigned char i1[8];
@@ -172,14 +182,27 @@ void wifi_Loop();
 
 #define NUM_OF_CONNECTORS 3
 
+bool flag_internet;
+bool flag_offline;
+
 //internet
 bool wifi_enable = false;
 bool gsm_enable  = false;
 
 bool wifi_connect = false;
 bool gsm_connect = false;
+bool offline_connect  = false;
+extern bool offline_charging_A;
+extern bool offline_charging_B;
+extern bool offline_charging_C;
+extern ulong timer1;
+extern Preferences preferences;
 
-
+void Offline_Loop();
+void wifi_Loop();
+void connectToWebsocket();
+void connectivity_Loop();
+void cloudConnectivityLed_Loop();
 
 void setup() {
   //Test LED
@@ -190,6 +213,7 @@ void setup() {
   //https://arduino-esp8266.readthedocs.io/en/latest/Troubleshooting/debugging.html
   Serial.setDebugOutput(true);
 
+  
 #if DISPLAY_ENABLED
   setupDisplay_Disp();
   cloudConnect_Disp(false);
@@ -238,7 +262,7 @@ void setup() {
     Serial.flush();
     delay(500);
   }
-
+  
   requestLed(BLINKYWHITE_ALL, START, 1);
   requestForRelay(STOP, 1);
   requestForRelay(STOP, 2);
@@ -263,6 +287,12 @@ void setup() {
   delay(10);
 
 #endif
+  SerialMon.printf("[SET UP]Freertos tick rate %d Hz\r\n[SET UP]portTICK_PERIOD_MS %u Milli second \r\n",
+                   configTICK_RATE_HZ, portTICK_PERIOD_MS);
+
+  SerialMon.printf("[SET UP]ESP32 Cpu Frequency  %d Mhz \r\n", getCpuFrequencyMhz());  // In MHz
+  SerialMon.printf("[SET UP]ESP32 Xtal Frequency %d Mhz \r\n", getXtalFrequencyMhz());  // In MHz
+  SerialMon.printf("[SET UP]ESP32 Apb Frequency  %d Hz \r\n", getApbFrequency());  // In Hz
 
 
 #if LCD_ENABLED
@@ -277,7 +307,7 @@ void setup() {
   startingBTConfig();
 #endif
   /************************Preferences***********************************************/
-  /* preferences.begin("credentials",false);
+  /*  preferences.begin("credentials",false);
 
     ws_url_prefix_m = preferences.getString("ws_url_prefix",""); //characters
     if(ws_url_prefix_m.length() > 0){
@@ -303,12 +333,13 @@ void setup() {
     }
     delay(100);
 
-    protocol_m = preferences.getString("protocol","");
-    if(protocol_m.length() > 0){
-   	Serial.println("Fetched protocol data success: "+String(protocol_m));
+    protocol = preferences.getString("protocol","");
+    if(protocol.length() > 0){
+   	Serial.println("Fetched protocol data success: "+String(protocol));
     }else{
    	Serial.println("Unable to Fetch protocol");
-    }*/
+    } */
+    
   urlparser();
   //Added this not to break.
   //preferences.begin("credentials",false);
@@ -331,7 +362,22 @@ void setup() {
 
   gsm_enable = preferences.getBool("gsm", 0);
   Serial.println("Fetched Gsm data: " + String(gsm_enable));
+  
+  offline_connect =  preferences.getBool("offline", 0);
+  Serial.println("Fetched Offline data: " + String(offline_connect));
+  /******************************************************************************/
+  /*             EVSE Offline Functionality  is Enabled                         */
 
+  if((wifi_enable == false) && (gsm_enable == false) )
+  {
+    offline_connect = true;
+    Serial.println("Both WiFi and GSM is Disabled....!");
+    Serial.println("EVSE Offline Functionality is Enabled ....!");
+    requestLed(GREEN,START,1);
+    requestLed(GREEN,START,2);
+    requestLed(GREEN,START,3);
+  }
+  /******************************************************************************/
   //Ideally preferences should be closed.
   //WiFi
   wifi_connect = wifi_enable;
@@ -345,7 +391,10 @@ void setup() {
     WiFi.begin(ssid_m.c_str(), key_m.c_str());
   }
 
+#if 1
   //WiFi
+  if(!offline_connect)
+  {
   while (internet == false) {
     Serial.println(F("Internet loop"));
 #if DWIN_ENABLED
@@ -427,6 +476,9 @@ void setup() {
 #endif
         if (counter_gsmNotConnected++ > 1) { //2 == 5min
           counter_gsmNotConnected = 0;
+            
+           //offline_connect = true;
+           //break;
 
           if (wifi_enable == true) {
             wifi_connect = true;
@@ -459,11 +511,17 @@ void setup() {
 #endif
       }
 
-    }
+    }else if(offline_connect == true && gsm_connect == false && wifi_connect == false){ //redundous but for sake of safe coding testing all flags
+            //Offline_Loop();  
+            Serial.println(F("[SETUP] ******OFFLINE loop enabled!*****"));
+            break;  
+           
+      }
 
 
   }
-
+  }
+#endif
   //SPI Enable for Energy Meter Read
   hspi = new SPIClass(HSPI); // Init SPI bus
   hspi->begin();
@@ -500,7 +558,8 @@ void setup() {
 
   //set system time to default value; will be without effect as soon as the BootNotification conf arrives
   setTimeFromJsonDateString("2021-22-12T11:59:55.123Z"); //use if needed for debugging
-
+if(!offline_connect)
+{
   if (DEBUG_OUT) Serial.println(F("Web Socket Connction..."));
   while (!webSocketConncted && wifi_connect == true) {
     Serial.print(F("*"));
@@ -508,9 +567,10 @@ void setup() {
     webSocket.loop();
     bluetooth_Loop();
   }
+}
 
-  EVSE_B_initialize();
   EVSE_A_initialize();
+  EVSE_B_initialize();
   EVSE_C_initialize();
 
   Serial.println(F("End of Setup"));
@@ -567,7 +627,30 @@ void loop() {
 #if DWIN_ENABLED
   display_avail();
 #endif
-  ocppEngine_loop();
+
+
+  
+
+/*
+* @brief By G. Raja Sumant who compared it with previous version.
+This is not necessary. It is being taken care inside wifi_gsm_connect loop.
+*/
+/*
+if(wifi_connect){
+    if((WiFi.status() == WL_CONNECTED) && (webSocketConncted == true) && (isInternetConnected == true)){
+      Serial.print("[Wifi]");
+      ocppEngine_loop();
+      webSocket.loop();
+    }
+
+  }else if(gsm_connect){
+    if(client.connected() == true){
+      Serial.println("[GSM]");
+      ocppEngine_loop();
+      gsmOnEvent();
+    }
+  }*/ 
+
 
   emergencyRelayClose_Loop_A();
   emergencyRelayClose_Loop_B();
@@ -575,14 +658,48 @@ void loop() {
 
   EVSE_ReadInput(&mfrc522);
 
-  EVSE_A_loop();
-  EVSE_B_loop();
-  EVSE_C_loop();
+  if(offline_connect)
+  {
+        
+    if(offline_charging_A)
+    {
+      EVSE_A_offline_Loop();
+    }
 
-  internetLoop();
+    if(offline_charging_B)
+    {
+      EVSE_B_offline_Loop();
+    }
+    
+    if(offline_charging_C)
+    {
+      EVSE_C_offline_Loop();
+    }
 
-  cloudConnectivityLed_Loop();
-  ota_Loop();
+    EVSE_A_LED_loop();
+    EVSE_B_LED_loop();
+    EVSE_C_LED_loop();
+  }
+  else
+  {
+    ocppEngine_loop();
+    EVSE_A_loop();
+    EVSE_B_loop();
+    EVSE_C_loop();
+    internetLoop();
+    cloudConnectivityLed_Loop();
+    ota_Loop();
+  }  
+
+ 
+ 
+  //connectivity_Loop();
+
+  //cloudConnectivityLed_Loop();
+
+  // if(!flag_offline) {cloudConnectivityLed_Loop(); }   // blink LED Once disconnected form Internet but Not in Offline mode
+
+  
 
   getChargePointStatusService_A()->loop();
   getChargePointStatusService_B()->loop();
@@ -786,6 +903,9 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
 #endif
 
 #else
+bool flag_offline_stopA = false;
+bool flag_offline_stopB = false;
+bool flag_offline_stopC = false;
 
 /***************************************EVSE_READINPUT BLOCK*********************************************************/
 String readIdTag = "";
@@ -813,17 +933,31 @@ void EVSE_ReadInput(MFRC522* mfrc522) {    // this funtion should be called only
 #endif
     readConnectorVal = requestConnectorStatus();
     if (readConnectorVal > 0) {
-      bool result = assignEvseToConnector(readIdTag, readConnectorVal);
+      bool result = false;
+      if(offline_connect)
+      {
+        Serial.println(F("******selecting via offline*****"));
+         result = assignEvseToConnector_Offl(readIdTag, readConnectorVal);    
+         
+      }
+      else
+      {
+        Serial.println(F("******selecting via online*****"));
+         result = assignEvseToConnector(readIdTag, readConnectorVal);
+      }
+      
+      
       if (result == true) {
         Serial.println(F("Attached/Detached EVSE to the requested connector"));
 #if LCD_ENABLED
         lcd.clear();
 
         lcd.setCursor(0, 1);
-        lcd.print("ATTACHED");
+        lcd.print("ATTACHED/DETACHED");
         lcd.setCursor(0, 2);
         lcd.print("PLEASE WAIT");
 #endif
+
 #if DISPLAY_ENABLED
         flag_freeze = true;
         switch (readConnectorVal)
@@ -976,6 +1110,7 @@ bool assignEvseToConnector(String readIdTag, int readConnectorVal) {
       status = true;
     } else if (getChargePointStatusService_A()->inferenceStatus() == ChargePointStatus::Available) {
       getChargePointStatusService_A()->authorize(readIdTag, readConnectorVal);
+    
       status = true;
     }
 
@@ -1004,6 +1139,99 @@ bool assignEvseToConnector(String readIdTag, int readConnectorVal) {
   }
 
   return status;
+
+}
+
+bool assignEvseToConnector_Offl(String readIdTag, int readConnectorVal)
+{
+  unsigned long tout = millis();
+  if (readConnectorVal == 1) {
+    if (getChargePointStatusService_A()->getIdTag() == readIdTag && getChargePointStatusService_A()->getEvDrawsEnergy() == true) {
+      //stop session
+      Serial.println(F("[EVSE_A] Stopping Transaction with RFID TAP"));
+
+      EVSE_A_StopSession();
+      offline_charging_A = false;
+      // getChargePointStatusService_A()->stopEvDrawsEnergy();
+      // getChargePointStatusService_A()->unauthorize();
+      // requestForRelay(STOP,1);
+      EVSE_A_stopOfflineTxn();
+      Serial.println("Stopping Offline Charging by rfid");
+         
+      return true;
+    } else if (getChargePointStatusService_A()->inferenceStatus() == ChargePointStatus::Available) {
+      if(getChargePointStatusService_A()->getEvDrawsEnergy() == false)
+      {
+        getChargePointStatusService_A()->authorize(readIdTag, readConnectorVal);
+        getChargePointStatusService_A()->startEvDrawsEnergy();
+        EVSE_A_startOfflineTxn();
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+
+  } else if (readConnectorVal == 2) {
+    if (getChargePointStatusService_B()->getIdTag() == readIdTag && getChargePointStatusService_B()->getEvDrawsEnergy() == true) {
+      //stop session
+      Serial.println(F("[EVSE_B] Stopping Transaction with RFID TAP"));
+
+        EVSE_B_StopSession();
+        offline_charging_B = false;
+        // getChargePointStatusService_B()->stopEvDrawsEnergy();
+        // getChargePointStatusService_B()->unauthorize();
+        // requestForRelay(STOP,2);
+        EVSE_B_stopOfflineTxn();
+        
+        Serial.println("Stopping Offline Charging by rfid");
+        
+        return true;
+    } else if (getChargePointStatusService_B()->inferenceStatus() == ChargePointStatus::Available) {
+      if(getChargePointStatusService_B()->getEvDrawsEnergy() == false)
+      {
+        getChargePointStatusService_B()->startEvDrawsEnergy();
+        getChargePointStatusService_B()->authorize(readIdTag, readConnectorVal);
+        EVSE_B_startOfflineTxn();
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+
+  }
+  else if (readConnectorVal == 3) {
+    if (getChargePointStatusService_C()->getIdTag() == readIdTag && getChargePointStatusService_C()->getEvDrawsEnergy() == true) {
+      //stop session
+      Serial.println(F("[EVSE_B] Stopping Transaction with RFID TAP"));
+
+      EVSE_C_StopSession();
+      offline_charging_C = false;
+      // getChargePointStatusService_C()->stopEvDrawsEnergy();
+      // getChargePointStatusService_C()->unauthorize();
+      // requestForRelay(STOP,3);
+      EVSE_C_stopOfflineTxn();
+      Serial.println("Stopping Offline Charging by rfid");
+      
+      return true;
+    } else if (getChargePointStatusService_C()->inferenceStatus() == ChargePointStatus::Available) {
+      if(getChargePointStatusService_C()->getEvDrawsEnergy() == false)
+      {
+        getChargePointStatusService_C()->startEvDrawsEnergy();
+        getChargePointStatusService_C()->authorize(readIdTag, readConnectorVal);
+        EVSE_C_startOfflineTxn();
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+
+  }
 
 }
 
@@ -1149,7 +1377,8 @@ void cloudConnectivityLed_Loop() {
         lcd.setCursor(0, 2);
         lcd.print("CONNECTION");
         lcd.setCursor(0, 3);
-        lcd.print("CLOUD: offline");
+        lcd.print("CLOUD: OFFLINE");
+        //lcd.print("CLOUD: offline");
 #endif
 #if LED_ENABLED
         requestLed(BLINKYWHITE_ALL, START, 1);
@@ -1179,7 +1408,9 @@ void cloudConnectivityLed_Loop() {
       lcd.setCursor(0, 2);
       lcd.print("CONNECTION");
       lcd.setCursor(0, 3);
-      lcd.print("CLOUD: offline");
+      lcd.print("CLOUD: OFFLINE");
+      //lcd.print("CLOUD: offline");
+
 #endif
 #if LED_ENABLED
       requestLed(BLINKYWHITE_ALL, START, 1);
@@ -1219,4 +1450,41 @@ void connectToWebsocket() {
   // try ever 5000 again if connection has failed
   webSocket.setReconnectInterval(5000);
   //#endif
+}
+
+void connectivity_Loop(){
+
+  if(wifi_connect == true){
+
+    if((WiFi.status() != WL_CONNECTED || webSocketConncted == false || isInternetConnected == false ) && getChargePointStatusService_A()->getEmergencyRelayClose() == false){
+
+      flag_internet = checkInternet();
+      if(flag_internet == false){
+        Offline_Loop();
+      }
+
+    }else{
+      flag_offline = false;
+    }
+  }else if(gsm_connect == true){
+
+    if(client.connected() ==  false && getChargePointStatusService_A()->getEmergencyRelayClose() == false){
+
+      flag_internet = checkInternet();
+      if(flag_internet == false){
+        Offline_Loop();
+      }
+    }else{
+
+      flag_offline = false;
+    }
+  }
+}							  
+
+
+void Offline_Loop()
+{
+  // EVSE_A_Offline_Loop();
+  // EVSE_B_Offline_Loop();
+  // EVSE_C_Offline_Loop();
 }

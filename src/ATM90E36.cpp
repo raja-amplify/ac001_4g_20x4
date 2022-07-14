@@ -239,7 +239,8 @@ double  ATM90E36::GetLineVoltageA() {
     flag_ed_A = false;
   }
   #endif
-  if (volt<200){
+  //if (volt<200){
+  if (volt<170){ // For LB nagar hubs
     if(!flag_ed_A)
     {
 	  getChargePointStatusService_A()->setUnderVoltage(true);
@@ -342,7 +343,8 @@ double  ATM90E36::GetLineVoltageB() {
   unsigned short voltage = CommEnergyIC(READ, UrmsB, 0xFFFF);
   double volt = (double)voltage / 100;
   uint8_t err = 0;
-  if (volt<200){
+  //if (volt<200){
+  if (volt<170){ // For LB nagar hubs
     if(!flag_ed_A)
     {
 	  getChargePointStatusService_B()->setUnderVoltage(true);
@@ -444,7 +446,8 @@ double  ATM90E36::GetLineVoltageC() {
   unsigned short voltage = CommEnergyIC(READ, UrmsC, 0xFFFF);
   double volt = (double)voltage / 100;
   uint8_t err = 0;
-  if (volt<200){
+  //if (volt<200){
+  if (volt<170){ // For LB nagar hubs
      if(!flag_ed_A)
     {
 	  getChargePointStatusService_C()->setUnderVoltage(true);
@@ -556,7 +559,8 @@ double ATM90E36::GetLineCurrentA() {
 	//if (curr > 35){
   if (curr > 16){
 		getChargePointStatusService_A()->setOverCurrent(true);
-    getChargePointStatusService_A()->setEmergencyRelayClose(true);
+   // getChargePointStatusService_A()->setEmergencyRelayClose(true);
+   // getChargePointStatusService_A()->stopEvDrawsEnergy();
     Serial.println(F("[EVSE_A] Over Current"));
     fault_code_A = OverCurrent;
     reasonForStop_A = Other; 
@@ -609,7 +613,8 @@ double ATM90E36::GetLineCurrentB() {
   //if (curr > 35){
   if (curr > 16){
     getChargePointStatusService_B()->setOverCurrent(true);
-    getChargePointStatusService_B()->setEmergencyRelayClose(true);
+   // getChargePointStatusService_B()->setEmergencyRelayClose(true);
+   // getChargePointStatusService_B()->stopEvDrawsEnergy();
     Serial.println(F("[EVSE_B] Over Current"));
     #if DISPLAY_ENABLED
     connAvail(2,"OVER CURRENT");
@@ -664,7 +669,8 @@ double ATM90E36::GetLineCurrentC() {
   //if (curr > 35){
   if (curr > 16){
     getChargePointStatusService_C()->setOverCurrent(true);
-    getChargePointStatusService_C()->setEmergencyRelayClose(true);
+    //getChargePointStatusService_C()->setEmergencyRelayClose(true);  
+  //  getChargePointStatusService_C()->stopEvDrawsEnergy();
     Serial.println(F("[EVSE_A] Over Current"));
     #if DISPLAY_ENABLED
     connAvail(3,"OVER CURRENT");

@@ -8,6 +8,10 @@
 
 #include "Variants.h"
 
+extern float online_charging_Enargy_A;
+extern float online_charging_Enargy_B;
+extern float online_charging_Enargy_C;
+
 //can only be used for echo server debugging
 MeterValues::MeterValues() {
   sampleTime = LinkedList<time_t>(); //not used in server mode but needed to keep the destructor simple
@@ -104,6 +108,15 @@ DynamicJsonDocument* MeterValues::createReq() {
       sampledValue_2["phase"] = "L1";
       sampledValue_2["location"] = "Cable";
       sampledValue_2["unit"] = "Wh";
+      switch(connectorId)
+      {
+      case 1: online_charging_Enargy_A = sampledValue_2["value"];
+      break;
+      case 2: online_charging_Enargy_B = sampledValue_2["value"];
+      break;
+      case 3: online_charging_Enargy_C = sampledValue_2["value"];
+      break;
+      }
       /*sampledValue_2["setValue"] = true;
       sampledValue_2["setContext"] = true;
       sampledValue_2["setFormat"] = true;

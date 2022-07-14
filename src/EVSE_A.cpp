@@ -8,6 +8,7 @@ Edited by Pulkit Agrawal.
 
 #include "EVSE_A.h"
 #include "Master.h"
+
 #include "ControlPilot.h"
 
 #include "LCD_I2C.h"
@@ -75,7 +76,7 @@ bool flag_rebootRequired_A;
 bool flag_evseSoftReset_A; //added by @Wamique
 
 
-
+float minCurr = 0.1; // For LB nagar hubs
 
 extern ATM90E36 eic;
 extern bool flag_rebootRequired_B;
@@ -127,6 +128,8 @@ String idTagData_A = "";
 
 ulong relay_timer_A;
 ulong faultTimer_A = 0;
+
+const ulong TIMEOUT_EMERGENCY_RELAY_CLOSE_A = 120000;
 
 //initialize function. called when EVSE is booting. 
 //NOTE: It should be also called when there is a reset or reboot required. create flag to control that. @Pulkit
@@ -224,6 +227,18 @@ void EVSE_A_setup(){
 				if(millis() - timerForRfid > 8000){ //timer for sending led request
 	    		  	requestLed(GREEN,START,1);
 	    		  	timerForRfid = millis();
+					//add lcd print to take it back to available and online via wifi
+					#if LCD_ENABLED
+					lcd.clear();
+					lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+					lcd.print("STATUS: AVAILABLE");
+					lcd.setCursor(0, 1);
+					lcd.print("TAP RFID/SCAN QR");
+					lcd.setCursor(0, 2);
+					lcd.print("CONNECTION");
+					lcd.setCursor(0, 3);
+					lcd.print("CLOUD: WIFI");
+					#endif
     		  	}
 			
 				currentIdTag_A = EVSE_A_getCurrnetIdTag(&mfrc522);
@@ -252,6 +267,19 @@ void EVSE_A_setup(){
 				if(millis() - timerForRfid > 8000){ //timer for sending led request
 	    		  	requestLed(GREEN,START,1);
 	    		  	timerForRfid = millis();
+					//add lcd print to take it back to available and online via 4G
+					#if LCD_ENABLED
+					lcd.clear();
+					lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+					lcd.print("STATUS: AVAILABLE");
+					lcd.setCursor(0, 1);
+					lcd.print("TAP RFID/SCAN QR");
+					lcd.setCursor(0, 2);
+					lcd.print("CONNECTION");
+					lcd.setCursor(0, 3);
+					lcd.print("CLOUD: 4G");
+					#endif
+
     		  	}
 			
 				currentIdTag_A = EVSE_A_getCurrnetIdTag(&mfrc522);
@@ -451,7 +479,7 @@ void EVSE_A_setup(){
     	/**********************Until Offline functionality is implemented***********/
     	//Resume namespace(Preferences)
     	if(getChargePointStatusService_A()->getEmergencyRelayClose() == false){
-    		requestLed(GREEN,START,1);   //temp fix
+    		//requestLed(GREEN,START,1);   //temp fix     // it is affecting offline led functionality
     	}
     	resumeTxn_A.putBool("ongoingTxn_A",false);
     	resumeTxn_A.putString("idTagData_A","");
@@ -725,7 +753,7 @@ void EVSE_A_loop() {
 				 //Current check
 				 drawing_current_A = eic.GetLineCurrentA();
 				 Serial.println("Current A: "+ String(drawing_current_A));
-				 if(drawing_current_A <= 0.15){
+				 if(drawing_current_A <= minCurr){
 				 	counter_drawingCurrent_A++;
 				 	//if(counter_drawingCurrent_A > 120){
 					if(counter_drawingCurrent_A > currentCounterThreshold_A){
@@ -801,15 +829,47 @@ bool EMGCY_FaultOccured_A = false;
 
 void emergencyRelayClose_Loop_A(){
 	if(millis() - faultTimer_A >1000){ // This was 2000 earlier
+
+
+	
+	// Added a new condition to check the toggling of relays in no earth state.
+			//G. Raja Sumant - 06/05/2022
+			if(getChargePointStatusService_A()->getOverCurrent() == true)
+			{
+			//getChargePointStatusService_A()->stopEvDrawsEnergy();
+			//getChargePointStatusService_A()->setEmergencyRelayClose(true);
+			if(getChargePointStatusService_A()->getTransactionId() != -1)
+			{
+			//flag_evRequestsCharge_A = false;
+			//flag_evseStopTransaction_A = true;
+			#if LCD_ENABLED
+            lcd.clear();
+ 		    lcd.setCursor(0, 0); // Or setting the cursor in the desired position.
+			lcd.print("STATUS: FAULTED");
+			lcd.setCursor(0, 1);
+			lcd.print("A: OVER CURRENT");
+			#endif
+			EVSE_A_StopSession();
+			}
+			
+
+
+			
+	
+	}
 		bool EMGCY_status_A = requestEmgyStatus();
 		Serial.println("EMGCY_Status_A: "+String(EMGCY_status_A));
 		if(EMGCY_status_A == true){
 			if(EMGCY_counter_A++ > 0){
 			//if(EMGCY_counter_A == 0){
 				requestForRelay(STOP,1);
+				requestForRelay(STOP,2);
+				requestForRelay(STOP,3);
 				reasonForStop_A = 0;
 				disp_evse_A = false;
 				requestLed(BLINKYRED,START,1);
+				requestLed(BLINKYRED,START,2);
+				requestLed(BLINKYRED,START,3);
 				#if DWIN_ENABLED
 				uint8_t err = 0;
    // fault_emgy[4] = 0X51; // In the first page.
@@ -913,7 +973,7 @@ void emergencyRelayClose_Loop_A(){
 					}
 
 					if (timeout_active_A && getChargePointStatusService_A()->getTransactionId() != -1) {
-						if (millis() - timeout_start_A >= TIMEOUT_EMERGENCY_RELAY_CLOSE){
+						if (millis() - timeout_start_A >= TIMEOUT_EMERGENCY_RELAY_CLOSE_A){
 							Serial.println(F("[EVSE_A] Emergency Stop."));
 							flag_evRequestsCharge_A = false;
 							flag_evseStopTransaction_A = true;
@@ -1102,7 +1162,7 @@ void displayMeterValues(){
 			int instantVoltage_A  = eic.GetLineVoltageA();
 			float instantPower_A = 0.0f;
 
-			if(instantCurrrent_A < 0.15){
+			if(instantCurrrent_A < minCurr){
 				instantPower_A = 0;
 			}else{
 				instantPower_A = (instantCurrrent_A * instantVoltage_A)/1000.0;
@@ -1244,3 +1304,4 @@ uint8_t err = 0;
 	}
 		
 }
+

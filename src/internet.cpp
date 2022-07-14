@@ -1,5 +1,9 @@
 #include "internet.h"
 
+#define DEBUG_INTERNET true
+#define INTERNET_CHECK_PERIOD 		600000 //1800000   //Every 30 min we will check for internet
+#define INTERNET_CONNECTION_TRY		300000		//Keep try connecting to Internet
+
 void wifi_Loop();
 void cloudConnectivityLed_Loop();
 
@@ -13,8 +17,49 @@ extern bool wifi_enable;
 extern bool gsm_connect;
 extern bool gsm_enable;
 
+extern bool flag_internet;
+extern bool flag_offline;
+
 int counter_gsmconnect = 0;
 int counter_wifiConnect = 0;
+
+ulong timer1;
+ulong timer2;
+
+
+bool flag_Timer2Initialized;
+
+bool checkInternet(){
+	if(DEBUG_INTERNET) Serial.println("Internet check.....");
+
+	if(millis() - timer1 > INTERNET_CHECK_PERIOD){
+
+		if(flag_Timer2Initialized == false){
+			timer2 = millis();
+			if(DEBUG_INTERNET) Serial.println("Initialized Timer 2");
+			flag_Timer2Initialized = true;
+		}
+
+		internetLoop();
+		flag_offline = false;
+
+
+		if(millis() - timer2 > INTERNET_CONNECTION_TRY){
+			timer1 = millis();
+			flag_Timer2Initialized = false;
+
+			Serial.println("Initializing Timer 1");
+		}
+
+		return true;
+
+	} 
+
+	return false;
+
+}
+
+
 
 
 void internetLoop(){

@@ -16,6 +16,10 @@ extern LCD_I2C lcd;
 bool flag_MeteringIsInitialised = false;
 Preferences energymeter;
 
+extern float online_charging_Enargy_A;
+extern float online_charging_Enargy_B;
+extern float online_charging_Enargy_C;
+
 MeteringService::MeteringService(WebSocketsClient *webSocket)
       : webSocket(webSocket) {
   
@@ -757,7 +761,7 @@ float MeteringService::currentEnergy_A(){
 
 	if(DEBUG_OUT) Serial.println("The last Energy_A is: " + String(lastEnergy_A));
 	if(DEBUG_OUT) Serial.println("The current Energy_A is: " + String(finalEnergy_A));
-
+	//online_charging_Enargy_A = finalEnergy_A;
 	return finalEnergy_A;
 
 

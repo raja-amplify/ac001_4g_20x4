@@ -30,7 +30,7 @@ void SetupGsm(){
     #endif
 
     if(DEBUG_OUT) SerialMon.println(F("[CustomSIM7672] Waiting for network..."));
-    if (!modem.waitForNetwork()) {
+    if (!modem.waitForNetwork(120000)) {
         if(DEBUG_OUT) SerialMon.println(F("[CustomSIM7672] fail"));
         delay(200);
         return;

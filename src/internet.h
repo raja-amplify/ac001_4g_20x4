@@ -5,3 +5,4 @@
 void internetLoop();
 void wifi_gsm_connect();
 void cloudConnectivityLed_Loop();
+bool checkInternet();

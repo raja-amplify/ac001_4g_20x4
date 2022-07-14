@@ -6,7 +6,6 @@ BluetoothSerial SerialBT;
 //********Websocket Data********//
 const char* ws_url_prefix = "";
 const char* chargepoint = "";
-
 // const char* host = "";
 // int port;
 // const char* protocol = "";
@@ -21,6 +20,9 @@ const char* key  = "";
 // bool gsmEnabled = false;
 
 String message = "";
+
+
+
 
 char* adminBT = "ESP_BT";
 char* psswdBT = "54321";
@@ -136,9 +138,9 @@ void eepromStoreCred(){
   preferences.putString("key", key);
   preferences.putString("ws_url_prefix",ws_url_prefix);
   preferences.putString("chargepoint",chargepoint);
-  // preferences.putString("host",host);
-  // preferences.putInt("port",port);
-  // preferences.putString("protocol",protocol);
+  preferences.putString("host",host);
+  preferences.putInt("port",port);
+  preferences.putString("protocol",protocol);
   preferences.putBool("wifi",wifi);
   preferences.putBool("gsm",gsm);
   preferences.putBool("offline",offline);									 
@@ -163,9 +165,9 @@ void eepromStoreCred(){
   Serial.println(F("Received Credential:"));
   Serial.println(ws_url_prefix);
   Serial.println(chargepoint);
-  // Serial.println(host);
-  // Serial.println(port);
-  // Serial.println(protocol);
+  Serial.println(host);
+  Serial.println(port);
+  Serial.println(protocol);
   Serial.println("wifi: "+String(wifi));
   Serial.println("gsm: "+String(gsm));
   Serial.println("Stored SSID: "+String(ssid));
@@ -217,9 +219,9 @@ bool VerifyCred(String message){
 
   ws_url_prefix = docBT["ws_url"];
   chargepoint = docBT["cp"];
-  // host = docBT["host"];
-  // port = docBT["port"];
-  // protocol = docBT["protocol"];
+  host = docBT["host"];
+  port = docBT["port"];
+  protocol = docBT["protocol"];
 
   wifi = docBT["wifi"];
   gsm  = docBT["gsm"];
@@ -250,7 +252,7 @@ return false;
 void startingBTConfig(){ //
 
   //if(!SerialBT.begin("ESP_AC001")){
-  if(!SerialBT.begin("ESP_AC001_Offl"+String(WiFi.macAddress()))){
+  if(!SerialBT.begin("ESP_AC001"+String(WiFi.macAddress()))){
     Serial.println(F("An error occurred initializing Bluetooth"));
   }else{
     SerialBT.println("Bluetooth initialized");

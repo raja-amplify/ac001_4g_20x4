@@ -37,6 +37,8 @@ private:
 	bool overCurrent = false;
 	bool underCurrent = false;
 	bool emergencyRelayClose = false;
+	//Feature added by G. Raja Sumant for charge point status service.
+	bool unavailable = false;
 	ChargePointStatus currentStatus = ChargePointStatus::NOT_SET;
 	WebSocketsClient *webSocket;
 public:

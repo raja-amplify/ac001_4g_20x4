@@ -112,14 +112,20 @@ DynamicJsonDocument* StopTransaction::createReq() {
   lcd.setCursor(0, 0);
   lcd.print("TRANSACTION FINISHED");
   lcd.setCursor(0, 1);
-  lcd.print("KWH");
-  lcd.setCursor(4, 1);
+  // lcd.print("KWH");
+  // lcd.setCursor(4, 1);
+  lcd.print("KWH       :");
+  lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
   lcd.print(String(float((meterStop-globalmeterstartA)/1000)));
+  // lcd.setCursor(0,2);
+  // lcd.print("WH");
+  // lcd.setCursor(4,2);
+  // lcd.print(meterStop-globalmeterstartA);
   lcd.setCursor(0,2);
-  lcd.print("WH");
-  lcd.setCursor(4,2);
-  lcd.print(meterStop-globalmeterstartA);
+  lcd.print("CONNECTOR A");
   lcd.setCursor(0,3);
+  lcd.print("DURATION  :");
+  lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
   unsigned long seconds = (stop_time - st_timeA) / 1000;
   int hr = seconds/3600;                                                        //Number of seconds in an hour
   int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
@@ -181,14 +187,20 @@ DynamicJsonDocument* StopTransaction::createReq() {
   lcd.setCursor(0, 0);
   lcd.print("TRANSACTION FINISHED");
   lcd.setCursor(0, 1);
-  lcd.print("KWH");
-  lcd.setCursor(4, 1);
+  // lcd.print("KWH");
+  // lcd.setCursor(4, 1);
+  lcd.print("KWH       :");
+  lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
   lcd.print(String(float((meterStop-globalmeterstartB)/1000)));
+  // lcd.setCursor(0,2);
+  // lcd.print("WH");
+  // lcd.setCursor(4,2);
+  // lcd.print(meterStop-globalmeterstartB);
   lcd.setCursor(0,2);
-  lcd.print("WH");
-  lcd.setCursor(4,2);
-  lcd.print(meterStop-globalmeterstartB);
+  lcd.print("CONNECTOR B");
   lcd.setCursor(0,3);
+  lcd.print("DURATION  :");
+  lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
   unsigned long seconds = (stop_time - st_timeB) / 1000;
   int hr = seconds/3600;                                                        //Number of seconds in an hour
   int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
@@ -251,14 +263,20 @@ uint8_t err = 0;
   lcd.setCursor(0, 0);
   lcd.print("TRANSACTION FINISHED");
   lcd.setCursor(0, 1);
-  lcd.print("KWH");
-  lcd.setCursor(4, 1);
+  // lcd.print("KWH");
+  // lcd.setCursor(4, 1);
+  lcd.print("KWH       :");
+  lcd.setCursor(12, 1); // Or setting the cursor in the desired position.
   lcd.print(String(float((meterStop-globalmeterstartC)/1000)));
+  // lcd.setCursor(0,2);
+  // lcd.print("WH");
+  // lcd.setCursor(4,2);
+  // lcd.print(meterStop-globalmeterstartC);
   lcd.setCursor(0,2);
-  lcd.print("WH");
-  lcd.setCursor(4,2);
-  lcd.print(meterStop-globalmeterstartC);
+  lcd.print("CONNECTOR C");
   lcd.setCursor(0,3);
+  lcd.print("DURATION  :");
+  lcd.setCursor(12, 3); // Or setting the cursor in the desired position.
   unsigned long seconds = (stop_time - st_timeC) / 1000;
   int hr = seconds/3600;                                                        //Number of seconds in an hour
   int mins = (seconds-hr*3600)/60;                                              //Remove the number of hours and calculate the minutes.
